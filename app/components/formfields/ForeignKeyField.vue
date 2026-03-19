@@ -59,7 +59,10 @@ const currentSelection = computed({
       :disabled="!field.editable"
       placeholder="Select an option..."
       class="w-full"
-      @open="emit('clear-error')"
+      :class="{
+         'ring-1 ring-red-500': errorMessage
+      }"
+      @focus="emit('clear-error')" 
     />
 
     <FieldDescription class="text-xs mt-1">{{

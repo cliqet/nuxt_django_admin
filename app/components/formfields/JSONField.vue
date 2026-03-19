@@ -34,7 +34,7 @@ const handleRenderMenu = (items: MenuItem[]) => {
         v-model:text="modelValue"
         height="400"
         :class="{
-            'border-red-500': errorMessage
+            'ring-1 ring-red-500': errorMessage
         }"
         :dark-theme="isDark"
         :read-only="!field.editable"

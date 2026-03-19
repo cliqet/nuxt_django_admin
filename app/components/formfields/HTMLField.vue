@@ -147,9 +147,9 @@ const items = [
         'border rounded-md transition-colors min-h-40 p-2',
         errorMessage
           ? 'border-red-500 ring-1 ring-red-500'
-          : 'border-slate-300 dark:border-slate-700',
+          : 'border-slate-300 dark:border-slate-700 ring-0 ring-slate-300 dark:ring-slate-700',
       ]"
-      @focus="emit('clear-error')"
+      @update:model-value="emit('clear-error')"
     >
       <UEditorToolbar :editor="editor" :items="items">
         <template #link>

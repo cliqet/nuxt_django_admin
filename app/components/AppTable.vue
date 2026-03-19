@@ -6,6 +6,7 @@ import type { UTable } from "#components";
 import type {
   ListviewDataType,
   ModelAdminSettingsType,
+  SelectedOptionsType,
 } from "~/shared/types/app";
 import { DashboardRoute } from "~/shared/constants/routes";
 import { useAdminApiRequests } from "~/composables/admin/useAdminApiRequests";
@@ -15,7 +16,7 @@ const UCheckbox = resolveComponent("UCheckbox");
 const NuxtLink = resolveComponent("NuxtLink");
 const UBadge = resolveComponent("UBadge");
 
-const { getModelListViewRequest } = useAdminApiRequests();
+const { getModelListViewRequest, getModelFields } = useAdminApiRequests();
 
 export type PageChangeMetadata = {
   currentPage: number;
@@ -39,8 +40,16 @@ const emit = defineEmits<{
   (e: "table_event", payload: TableEventType): void;
 }>();
 
-// This model will be 1-based to satisfy the UPagination component
-// const page = defineModel<number>("page", { default: 1 });
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const tableApiRef = useTemplateRef<any>("tableApiRef");
+
+// Expose internal table state to parent if needed
+defineExpose({
+  tableApi: computed(() => tableApiRef.value?.tableApi),
+});
+
+const modelFieldsResponse = await getModelFields(props.appName!, props.modelName!);
+const modelFields = modelFieldsResponse.fields;
 
 /**
  * Dynamic Column Construction
@@ -82,6 +91,20 @@ const columns = computed(() => {
       cell: ({ row }) => {
         const value = row.getValue(key);
         const isLink = props.settings.list_display_links?.includes(key);
+        const field = modelFields[key];
+        const isFkField = field && field.type === "ForeignKey";
+
+        // If the field column is a foreign key
+        if (
+          isFkField &&
+          field.foreignkey_choices
+        ) {
+          const fkChoice = field.foreignkey_choices.find((choice: SelectedOptionsType) => {
+            return value === choice.value;
+          });
+
+          return String(fkChoice?.label ?? "-");
+        }
 
         // Render as NuxtLink if key is in list_display_links
         if (isLink) {
@@ -133,14 +156,6 @@ const columns = computed(() => {
   });
 
   return dynamicCols;
-});
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const tableApiRef = useTemplateRef<any>("tableApiRef");
-
-// Expose internal table state to parent if needed
-defineExpose({
-  tableApi: computed(() => tableApiRef.value?.tableApi),
 });
 
 const currentPage = ref(1);
@@ -252,7 +267,7 @@ watch(
             tableApiRef?.tableApi?.getFilteredSelectedRowModel().rows.length ||
             0
           }}
-          of {{ listResults.count }}
+          of {{ listResults.results.length }}
         </div>
 
         <UPagination

@@ -23,12 +23,12 @@ const modelValue = defineModel<any>({
       :name="field.name"
       :required="field.required"
       :disabled="!field.editable"
-      :class="{
-        'border-red-500': errorMessage,
-      }"
-      @focus="emit('clear-error')"
     >
-      <SelectTrigger class="w-45">
+      <SelectTrigger 
+        class="w-45"
+        :class="{ 'ring-1! ring-red-500!' : errorMessage }" 
+        @click="emit('clear-error')"
+      >
         <SelectValue :placeholder="`Select a ${field.label}`" />
       </SelectTrigger>
       <SelectContent>

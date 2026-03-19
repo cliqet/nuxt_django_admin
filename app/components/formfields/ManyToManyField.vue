@@ -107,7 +107,10 @@ const removeAll = () => {
   <Field>
     <FieldLabel :for="field.name">{{ field.label }}</FieldLabel>
 
-    <div class="grid grid-cols-12 gap-2 items-center min-h-62.5">
+    <div 
+      class="grid grid-cols-12 gap-2 items-center min-h-62.5"
+      @click="emit('clear-error')" 
+    >
       <!-- Available Column -->
       <div class="col-span-5 flex flex-col h-full">
         <span class="text-xs font-bold mb-1 uppercase text-gray-500"
@@ -169,7 +172,9 @@ const removeAll = () => {
       </div>
 
       <!-- Chosen Column -->
-      <div class="col-span-5 flex flex-col h-full">
+      <div 
+        class="col-span-5 flex flex-col h-full"
+      >
         <span class="text-xs font-bold mb-1 uppercase text-gray-500"
           >Chosen {{ field.label }}</span
         >
@@ -182,6 +187,9 @@ const removeAll = () => {
         />
         <div
           class="border rounded-md grow overflow-y-auto bg-white dark:bg-gray-900 h-48 border-primary-500/50"
+          :class="{
+            'border-red-500': errorMessage
+          }"
         >
           <div
             v-for="opt in chosenOptions"

@@ -1,4 +1,4 @@
-import type { AppListType, ListviewDataType, ModelAdminSettingsType } from "~/shared/types/app";
+import type { AppListType, ListviewDataType, ModelAdminSettingsType, ModelFieldType } from "~/shared/types/app";
 
 
 export const useAdminApiRequests = () => {
@@ -21,9 +21,16 @@ export const useAdminApiRequests = () => {
     `/model-admin-settings/${appLabel}/${modelName}/${pk}`
   );
 
+  const getModelFields = (
+    appLabel: string, modelName: string
+  ) => privateApi<{ fields: Record<string, ModelFieldType> }>(
+    `/model-fields/${appLabel}/${modelName}`
+  );
+
   return {
     getAdminAppRequest,
     getModelListViewRequest,
     getModelAdminSettings,
+    getModelFields,
   }
 }
