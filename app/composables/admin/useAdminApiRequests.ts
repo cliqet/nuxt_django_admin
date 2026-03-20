@@ -27,10 +27,17 @@ export const useAdminApiRequests = () => {
     `/model-fields/${appLabel}/${modelName}`
   );
 
+  const getModelFieldsEdit = (
+    appLabel: string, modelName: string, pk: string | number
+  ) => privateApi<{ fields: Record<string, ModelFieldType> }>(
+    `/model-fields/${appLabel}/${modelName}/${pk}`
+  );
+
   return {
     getAdminAppRequest,
     getModelListViewRequest,
     getModelAdminSettings,
     getModelFields,
+    getModelFieldsEdit,
   }
 }
