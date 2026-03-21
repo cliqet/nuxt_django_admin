@@ -270,6 +270,10 @@ watch(
           of {{ listResults.results.length }}
         </div>
 
+        <div class="text-xs text-muted">
+          Total records: {{ listResults.count }}
+        </div>
+
         <UPagination
           :items-per-page="settings.list_per_page"
           :total="listResults.count"

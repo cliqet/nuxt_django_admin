@@ -196,3 +196,5 @@ export type ListviewDataType = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   results: any[];
 }
+
+export type SaveType = "SAVE" | "SAVE_AND_ADD" | "SAVE_AND_CONTINUE";

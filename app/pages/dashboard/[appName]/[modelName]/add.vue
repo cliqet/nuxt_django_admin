@@ -7,6 +7,7 @@ import { TOAST_SUCCESS_STYLE } from "~/shared/constants/ui";
 import type {
   ModelAdminSettingsType,
   ModelFieldType,
+  SaveType,
 } from "~/shared/types/app";
 
 const route = useRoute();
@@ -61,7 +62,7 @@ const scrollToTop = () => {
   }
 };
 
-const handleSave = async () => {
+const handleSave = async (saveType: SaveType) => {
   let hasFormError = false;
 
   Object.keys(modelFields).forEach((key) => {
@@ -74,9 +75,6 @@ const handleSave = async () => {
   });
 
   if (!hasFormError) {
-    console.log("SUCCESS");
-    console.log(modelFieldValues.value);
-
     const formData = convertModelFieldValuesToFormData(
       modelFieldValues.value,
       modelFields
@@ -107,7 +105,19 @@ const handleSave = async () => {
         style: TOAST_SUCCESS_STYLE,
       });
 
-      navigateTo(`${DashboardRoute.DashboardHome}/${appName.value}/${modelName.value}`, { replace: true });
+      if (saveType === "SAVE") {
+        navigateTo(`${DashboardRoute.DashboardHome}/${appName.value}/${modelName.value}`, { replace: true });
+      } else if (saveType === "SAVE_AND_ADD") {
+        // 1. Manually reset the form values back to initial
+        modelFieldValues.value = mapModelFieldValues(modelFields);
+        
+        // 2. Clear any lingering validation errors
+        formErrors.value = {};
+
+        // 3. Scroll the user back to the top of the new form
+        scrollToTop();
+      } 
+      // stay on form if continue
     } 
   } else {
     scrollToTop();
@@ -117,10 +127,6 @@ const handleSave = async () => {
 const clearFieldError = (fieldName: string) => {
   formErrors.value[fieldName] = "";
 };
-
-const handleSaveAndAdd = () => {};
-
-const handleSaveAndEdit = () => {};
 </script>
 
 <template>
@@ -145,9 +151,9 @@ const handleSaveAndEdit = () => {};
     </div>
 
     <SaveFormButtons
-      @save="handleSave"
-      @save-add="handleSaveAndAdd"
-      @save-edit="handleSaveAndEdit"
+      @save="handleSave('SAVE')"
+      @save-add="handleSave('SAVE_AND_ADD')"
+      @save-edit="handleSave('SAVE_AND_CONTINUE')"
     />
   </form>
 </template>
