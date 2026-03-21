@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { ZonedDateTime } from "@internationalized/date";
-import { DateFormatter, parseAbsoluteToLocal } from "@internationalized/date";
+import type { ZonedDateTime, CalendarDate } from "@internationalized/date";
+import { DateFormatter, parseAbsoluteToLocal, getLocalTimeZone, fromDate } from "@internationalized/date";
 import { CalendarIcon, Clock } from "lucide-vue-next";
 import { cn } from "~/lib/utils";
 import type { ModelFieldType } from "~/shared/types/app";
@@ -17,21 +17,23 @@ const modelValue = defineModel<string | null>({
 });
 
 const updateISO = (date: ZonedDateTime | undefined, timeStr: string) => {
-  // 1. If we don't have a date yet, we can't build a full ISO string
   if (!date) return;
 
-  // 2. Parse the time string (HH:MM:SS)
-  const parts = timeStr.split(":").map(Number);
-  const [h, m, s] = parts.length === 3 ? parts : [0, 0, 0];
+  const parts = timeStr.split(":");
+  // Fallback to "0" ensures parseInt always gets a string
+  const h = parseInt(parts[0] || "0", 10);
+  const m = parseInt(parts[1] || "0", 10);
+  const s = parseInt(parts[2] || "0", 10);
 
-  // 3. Update the ZonedDateTime and save back to modelValue
   const updated = date.set({
-    hour: h || 0,
-    minute: m || 0,
-    second: s || 0,
+    hour: h,
+    minute: m,
+    second: s,
+    millisecond: 0
   });
 
-  modelValue.value = updated.toAbsoluteString();
+  // FIX: Use toAbsoluteString() to avoid the [Asia/Bangkok] brackets
+  modelValue.value = updated.toAbsoluteString(); 
   emit("clear-error");
 };
 
@@ -42,18 +44,24 @@ const datePart = computed({
   get: () => {
     if (!modelValue.value) return undefined;
     try {
-      // Parses "2025-06-05T10:58:00+00:00" into a ZonedDateTime object
       return parseAbsoluteToLocal(modelValue.value);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch (e) {
       console.error(e);
       return undefined;
     }
   },
   set: (val) => {
     if (val) {
-      // Merge new date with existing time
-      updateISO(val, timePart.value || "00:00:00");
+      // 1. Cast the value from shadcn Calendar
+      const calendarDate = val as unknown as CalendarDate;
+      
+      // 2. Convert: CalendarDate -> JS Date -> ZonedDateTime
+      // .toDate(tz) is the built-in way to get a JS Date from a CalendarDate
+      const jsDate = calendarDate.toDate(getLocalTimeZone());
+      const zonedDateTime = fromDate(jsDate, getLocalTimeZone());
+
+      // 3. Merge with your current time
+      updateISO(zonedDateTime, timePart.value || "00:00:00");
     }
   },
 });
@@ -94,6 +102,7 @@ const handleTimeInput = (e: Event) => {
 
 const formattedDate = computed(() => {
   if (!datePart.value) return "Pick date";
+  // ZonedDateTime already knows its timezone, so toDate() takes no arguments
   return df.format(datePart.value.toDate());
 });
 </script>

@@ -97,6 +97,27 @@ export const useApiClients = () => {
         localStorage.removeItem(ACCESS_TOKEN_KEY);
         await navigateTo(PublicRoute.Login);
       }
+
+      let message = "Something went wrong with your request";
+      if (response.status >= 400 && response.status !== 401) {
+        try {
+          if (
+            response.headers.get("Content-Type")?.includes("application/json")
+          ) {
+            const jsonResponse = await response.json(); // Await the JSON parsing
+            message = jsonResponse.message; // Use message from JSON if available
+          }
+        } catch (parseError) {
+          console.error("Error parsing JSON response:", parseError);
+          message = response._data.detail ?? message;
+        }
+
+        toast("Response Error", {
+          description: message,
+          style: TOAST_ERROR_STYLE,
+        });
+        console.log("RESPONSE", message);
+      }
     },
   });
 

@@ -11,15 +11,17 @@ type MaxSize = number | null;
 export const useModelFormValidation = () => {
   const convertBytesToMb = (byteSize: number) => {
     return byteSize / (1024 * 1024);
-  }
+  };
 
   const getFileExtension = (file: File): string => {
     // Use .name and split by the last dot
     const filename = file.name;
     const lastDotIndex = filename.lastIndexOf(".");
-    
+
     // If no dot exists (index is -1), return an empty string
-    return lastDotIndex !== -1 ? filename.slice(lastDotIndex).toLowerCase() : "";
+    return lastDotIndex !== -1
+      ? filename.slice(lastDotIndex).toLowerCase()
+      : "";
   };
 
   /**
@@ -36,7 +38,7 @@ export const useModelFormValidation = () => {
 
     if (matches[0] && matches[1]) {
       // 1. Process File Types
-      const typeContent = matches[0].replace(/[[\]]/g, ""); 
+      const typeContent = matches[0].replace(/[[\]]/g, "");
       let fileTypes: FileTypes = "Any";
 
       if (typeContent !== "Any") {
@@ -105,9 +107,10 @@ export const useModelFormValidation = () => {
         if (modelField.type === "SlugField") {
           const slugRegex = /^[-a-zA-Z0-9_]+$/;
           if (!slugRegex.test(value)) {
-            return { 
-              isValid: false, 
-              message: "Enter a valid 'slug' consisting of letters, numbers, underscores or hyphens." 
+            return {
+              isValid: false,
+              message:
+                "Enter a valid 'slug' consisting of letters, numbers, underscores or hyphens.",
             };
           }
         }
@@ -226,12 +229,15 @@ export const useModelFormValidation = () => {
             const fileExtension = getFileExtension(value);
 
             if (!fileTypes.includes(fileExtension)) {
-              return { isValid: false, message: `${fileExtension} is not allowed` }
+              return {
+                isValid: false,
+                message: `${fileExtension} is not allowed`,
+              };
             }
           }
-          
+
           if (maxSize && convertBytesToMb(value.size) > maxSize) {
-            return { isValid: false, message: `File exceeds ${maxSize} MB` }
+            return { isValid: false, message: `File exceeds ${maxSize} MB` };
           }
         }
 
@@ -242,9 +248,46 @@ export const useModelFormValidation = () => {
     return { isValid: true, message: "" };
   };
 
-  return { 
-    isFieldValueValid, 
-    extractFileRestrictions, 
-    convertBytesToMb 
+  const convertModelFieldValuesToFormData = (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    values: Record<string, any>,
+    modelFields: Record<string, ModelFieldType>
+  ): FormData => {
+    const formData = new FormData();
+
+    Object.keys(values).forEach((key) => {
+      const value = values[key];
+      const fieldType = modelFields[key]?.type;
+
+      if (fieldType === "ImageField" || fieldType === "FileField") {
+        // BE: If value == '', it skips processing (not required)
+        // Otherwise, it looks in request.FILES[key]
+        if (value instanceof File || value instanceof Blob) {
+          formData.append(key, value);
+        } else {
+          formData.append(key, "");
+        }
+      } else if (fieldType === "BooleanField") {
+        // BE: boolean_values expects lowercase 'true' or 'false'
+        formData.append(key, value ? "true" : "false");
+      } else if (fieldType === "ManyToManyField" && Array.isArray(value)) {
+        // BE: many_to_many_data[key] = value.split(',')
+        // So we must send a comma-separated string
+        formData.append(key, value.join(","));
+      } else {
+        if (value !== null && value !== undefined) {
+          formData.append(key, value);
+        }
+      }
+    });
+
+    return formData;
+  };
+
+  return {
+    isFieldValueValid,
+    extractFileRestrictions,
+    convertBytesToMb,
+    convertModelFieldValuesToFormData,
   };
 };

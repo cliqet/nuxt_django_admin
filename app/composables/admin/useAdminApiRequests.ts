@@ -1,5 +1,5 @@
 import type { AppListType, ListviewDataType, ModelAdminSettingsType, ModelFieldType } from "~/shared/types/app";
-
+import type { AddRecordResponse } from "~/shared/types/pages/addRecord";
 
 export const useAdminApiRequests = () => {
   const { privateApi } = useApiClients();
@@ -33,11 +33,22 @@ export const useAdminApiRequests = () => {
     `/model-fields/${appLabel}/${modelName}/${pk}`
   );
 
+  const addRecord = (
+    appLabel: string, modelName: string, formData: FormData
+  ) => privateApi<AddRecordResponse>(
+    `/add-record/${appLabel}/${modelName}`,
+    {
+      method: "POST", 
+      body: formData, 
+    }
+  );
+
   return {
     getAdminAppRequest,
     getModelListViewRequest,
     getModelAdminSettings,
     getModelFields,
     getModelFieldsEdit,
+    addRecord,
   }
 }
