@@ -43,6 +43,16 @@ export const useAdminApiRequests = () => {
     }
   );
 
+  const changeRecord = (
+    appLabel: string, modelName: string, formData: FormData, pk: string | number
+  ) => privateApi<AddRecordResponse>(
+    `/change-record/${appLabel}/${modelName}/${pk}`,
+    {
+      method: "POST", 
+      body: formData, 
+    }
+  );
+
   return {
     getAdminAppRequest,
     getModelListViewRequest,
@@ -50,5 +60,6 @@ export const useAdminApiRequests = () => {
     getModelFields,
     getModelFieldsEdit,
     addRecord,
+    changeRecord,
   }
 }

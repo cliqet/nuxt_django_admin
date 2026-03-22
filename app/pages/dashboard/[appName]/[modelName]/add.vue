@@ -15,10 +15,16 @@ const routeSegments = ref(route.path.split("/"));
 const appName = ref(routeSegments.value.at(-3));
 const modelName = ref(routeSegments.value.at(-2));
 
-const { isFieldValueValid, convertModelFieldValuesToFormData } =
-  useModelFormValidation();
-const { getModelAdminSettings, getModelFields, addRecord } =
-  useAdminApiRequests();
+const { 
+  isFieldValueValid, 
+  convertModelFieldValuesToFormData,
+  mapModelFieldValues, 
+} = useModelFormValidation();
+const { 
+  getModelAdminSettings, 
+  getModelFields, 
+  addRecord 
+} = useAdminApiRequests();
 
 const formRef = ref<HTMLFormElement | null>(null);
 const formErrors = ref<Record<string, string>>({});
@@ -35,22 +41,6 @@ const modelFieldsResponse = await getModelFields(
   modelName.value!
 );
 const modelFields = modelFieldsResponse.fields;
-
-const mapModelFieldValues = (dbModelFields: Record<string, ModelFieldType>) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const obj: Record<string, any> = {};
-  Object.keys(dbModelFields).forEach((key) => {
-    if (
-      ["ImageField", "FileField"].includes(dbModelFields[key]?.type as string)
-    ) {
-      obj[key] = null;
-    } else {
-      obj[key] = dbModelFields[key]?.initial;
-    }
-  });
-
-  return obj;
-};
 
 const fieldValues = mapModelFieldValues(modelFields);
 const modelFieldValues = ref(fieldValues);
@@ -105,8 +95,13 @@ const handleSave = async (saveType: SaveType) => {
         style: TOAST_SUCCESS_STYLE,
       });
 
+      await nextTick();
+
       if (saveType === "SAVE") {
-        navigateTo(`${DashboardRoute.DashboardHome}/${appName.value}/${modelName.value}`, { replace: true });
+        navigateTo(
+          `${DashboardRoute.DashboardHome}/${appName.value}/${modelName.value}`, 
+          { replace: true }
+        );
       } else if (saveType === "SAVE_AND_ADD") {
         // 1. Manually reset the form values back to initial
         modelFieldValues.value = mapModelFieldValues(modelFields);

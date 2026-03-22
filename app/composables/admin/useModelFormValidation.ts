@@ -62,13 +62,19 @@ export const useModelFormValidation = () => {
   const isFieldValueValid = (
     modelField: ModelFieldType,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    value: any
+    value: any,
   ): FieldValueValidityType => {
     const label = modelField.label;
 
     // 1. Handle Null/Undefined/Empty for Required Fields
     const isEmpty = value === null || value === undefined || value === "";
-    if (modelField.required && isEmpty) {
+    const isFileRequiredButHasInitial = (
+      ["ImageField", "FileField"].includes(modelField.type) && 
+      isEmpty &&
+      modelField.initial
+    )
+
+    if (modelField.required && isEmpty && !isFileRequiredButHasInitial) {
       return { isValid: false, message: `${label} is required` };
     }
 
@@ -248,6 +254,23 @@ export const useModelFormValidation = () => {
     return { isValid: true, message: "" };
   };
 
+  const mapModelFieldValues = (dbModelFields: Record<string, ModelFieldType>) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const obj: Record<string, any> = {}
+    Object.keys(dbModelFields).forEach(key => {
+      if (["ImageField", "FileField"].includes(dbModelFields[key]?.type as string)) {
+        obj[key] = null;
+      } else if (dbModelFields[key]?.type === "JSONField") {
+        obj[key] = JSON.stringify(dbModelFields[key].initial);
+      } else {
+        obj[key] = dbModelFields[key]?.initial;
+      }
+    })
+
+    return obj;
+  };
+
+
   const convertModelFieldValuesToFormData = (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     values: Record<string, any>,
@@ -289,5 +312,6 @@ export const useModelFormValidation = () => {
     extractFileRestrictions,
     convertBytesToMb,
     convertModelFieldValuesToFormData,
+    mapModelFieldValues,
   };
 };

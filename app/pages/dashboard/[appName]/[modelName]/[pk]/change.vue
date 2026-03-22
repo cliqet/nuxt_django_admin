@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { toast } from "vue-sonner";
 import { useAdminApiRequests } from "~/composables/admin/useAdminApiRequests";
 import { useModelFormValidation } from "~/composables/admin/useModelFormValidation";
-import type { ModelAdminSettingsType, ModelFieldType } from "~/shared/types/app";
+import { DashboardRoute } from "~/shared/constants/routes";
+import { TOAST_SUCCESS_STYLE } from "~/shared/constants/ui";
+import type { ModelAdminSettingsType, ModelFieldType, SaveType } from "~/shared/types/app";
 
 const route = useRoute();
 const routeSegments = ref(route.path.split("/"));
@@ -9,8 +12,16 @@ const appName = ref(routeSegments.value.at(-4));
 const modelName = ref(routeSegments.value.at(-3));
 const pk = ref(routeSegments.value.at(-2));
 
-const { isFieldValueValid } = useModelFormValidation();
-const { getModelAdminSettings, getModelFieldsEdit } = useAdminApiRequests();
+const { 
+  isFieldValueValid, 
+  convertModelFieldValuesToFormData, 
+  mapModelFieldValues 
+} = useModelFormValidation();
+const { 
+  getModelAdminSettings, 
+  getModelFieldsEdit, 
+  changeRecord 
+} = useAdminApiRequests();
 
 const formRef = ref<HTMLFormElement | null>(null);
 const formErrors = ref<Record<string, string>>({});
@@ -20,20 +31,6 @@ const modelAdminSettings: ModelAdminSettingsType = modelAdminSettingsResponse.mo
 
 const modelFieldsResponse = await getModelFieldsEdit(appName.value!, modelName.value!, pk.value!);
 const modelFields = modelFieldsResponse.fields;
-
-const mapModelFieldValues = (dbModelFields: Record<string, ModelFieldType>) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const obj: Record<string, any> = {}
-  Object.keys(dbModelFields).forEach(key => {
-    if (["ImageField", "FileField"].includes(dbModelFields[key]?.type as string)) {
-      obj[key] = null;
-    } else {
-      obj[key] = dbModelFields[key]?.initial;
-    }
-  })
-
-  return obj;
-};
 
 const fieldValues = mapModelFieldValues(modelFields);
 const modelFieldValues = ref(fieldValues);
@@ -45,7 +42,7 @@ const scrollToTop = () => {
   }
 };
 
-const handleSave = () => {
+const handleSave = async (saveType: SaveType) => {
   let hasFormError = false;
 
   Object.keys(modelFields).forEach(key => {
@@ -58,8 +55,52 @@ const handleSave = () => {
   });
 
   if (!hasFormError) {
-    console.log("SUCCESS");
-    console.log(modelFieldValues.value);
+    const formData = convertModelFieldValuesToFormData(
+      modelFieldValues.value,
+      modelFields
+    );
+
+    const response = await changeRecord(
+      appName.value!,
+      modelName.value!,
+      formData,
+      pk.value!
+    );
+
+    const validationErrors = response.validation_error;
+    if (validationErrors) {
+      hasFormError = true;
+      Object.keys(validationErrors).forEach((key) => {
+        if (validationErrors[key]) {
+          formErrors.value[key] = validationErrors[key];
+        }
+      });
+
+      return;
+    }
+
+
+    if (response.message) {
+      toast(`Record ${pk.value} Changed`, {
+        description: response.message,
+        style: TOAST_SUCCESS_STYLE,
+      });
+
+      await nextTick();
+
+      if (saveType === "SAVE") {
+        navigateTo(
+          `${DashboardRoute.DashboardHome}/${appName.value}/${modelName.value}`, 
+          { replace: true }
+        );
+      } else if (saveType === "SAVE_AND_ADD") {
+        navigateTo(
+          `${DashboardRoute.DashboardHome}/${appName.value}/${modelName.value}/add`, 
+          { replace: true }
+        );
+      } 
+      // stay on form if continue
+    } 
   } else {
     scrollToTop();
   }
@@ -68,10 +109,6 @@ const handleSave = () => {
 const clearFieldError = (fieldName: string) => {
   formErrors.value[fieldName] = "";
 };
-
-const handleSaveAndAdd = () => {};
-
-const handleSaveAndEdit = () => {};
 </script>
 
 <template>
@@ -96,9 +133,9 @@ const handleSaveAndEdit = () => {};
     </div>
 
     <SaveFormButtons
-      @save="handleSave"
-      @save-add="handleSaveAndAdd"
-      @save-edit="handleSaveAndEdit"
+      @save="handleSave('SAVE')"
+      @save-add="handleSave('SAVE_AND_ADD')"
+      @save-edit="handleSave('SAVE_AND_CONTINUE')"
     />
   </form>
 </template>

@@ -95,7 +95,7 @@ export const useApiClients = () => {
       if (response.status === 401) {
         userStore.setUser(null);
         localStorage.removeItem(ACCESS_TOKEN_KEY);
-        await navigateTo(PublicRoute.Login);
+        await navigateTo(PublicRoute.Login, { replace: true });
       }
 
       let message = "Something went wrong with your request";
