@@ -10,13 +10,18 @@ import type {
 } from "~/shared/types/app";
 import { DashboardRoute } from "~/shared/constants/routes";
 import { useAdminApiRequests } from "~/composables/admin/useAdminApiRequests";
+import { ChevronDown, ChevronUp } from "lucide-vue-next";
 
 // Nuxt UI & Vue Components
 const UCheckbox = resolveComponent("UCheckbox");
 const NuxtLink = resolveComponent("NuxtLink");
 const UBadge = resolveComponent("UBadge");
 
+const router = useRouter();
+const route = useRoute();
+
 const { getModelListViewRequest, getModelFields } = useAdminApiRequests();
+const { formatTitle } = useUtility();
 
 export type PageChangeMetadata = {
   currentPage: number;
@@ -48,7 +53,10 @@ defineExpose({
   tableApi: computed(() => tableApiRef.value?.tableApi),
 });
 
-const modelFieldsResponse = await getModelFields(props.appName!, props.modelName!);
+const modelFieldsResponse = await getModelFields(
+  props.appName!,
+  props.modelName!
+);
 const modelFields = modelFieldsResponse.fields;
 
 /**
@@ -95,13 +103,12 @@ const columns = computed(() => {
         const isFkField = field && field.type === "ForeignKey";
 
         // If the field column is a foreign key
-        if (
-          isFkField &&
-          field.foreignkey_choices
-        ) {
-          const fkChoice = field.foreignkey_choices.find((choice: SelectedOptionsType) => {
-            return value === choice.value;
-          });
+        if (isFkField && field.foreignkey_choices) {
+          const fkChoice = field.foreignkey_choices.find(
+            (choice: SelectedOptionsType) => {
+              return value === choice.value;
+            }
+          );
 
           return String(fkChoice?.label ?? "-");
         }
@@ -175,7 +182,139 @@ const listResults = ref<ListviewDataType>(
 
 const searchQuery = ref("");
 
+const ALL_VALUE = "ALL";
+
+const filterOpenStates = ref(
+  Array.from({ length: props.settings.list_filter.length }, () => true)
+);
+
+const getFilterValues = (fieldName: string) => {
+  const tableValuesField = props.settings.table_filters.find((tableValues) => {
+    return tableValues.field === fieldName;
+  });
+
+  if (tableValuesField) {
+    return tableValuesField.values.map((item) => {
+      if (item.label === "All") {
+        return {
+          value: ALL_VALUE,
+          label: item.label
+        }
+      } else {
+        return {
+          value: `${item.value}`,
+          label: item.label,
+        };
+      }
+    });
+  }
+
+  return [];
+};
+
+const initialFilterValues = props.settings.list_filter.map((_) => {
+  return [ALL_VALUE];
+});
+
+const currentFilterValues = ref<string[][]>(initialFilterValues);
+
+const createURLFilterParams = () => {
+  const filterParams: Record<string, string> = {};
+
+  currentFilterValues.value.forEach((field, fieldIndex) => {
+    if (field.length > 0) {
+      filterParams[props.settings.list_filter[fieldIndex] as string] = JSON.stringify(currentFilterValues.value[fieldIndex]); 
+    }
+  });
+
+  return filterParams;
+}
+
+const convertFilterValueToApiArrayData = (fieldName: string, filterValue: string[]) => {
+  // No filters
+  if (filterValue.length < 1) {
+    return "";
+  } else {
+    // All is the only filter
+    if (filterValue.length === 1 && filterValue[0] === ALL_VALUE) {
+      return "";
+    }
+
+    // If there is a "True" or "False"
+    if (filterValue.includes("true") || filterValue.includes("false")) {
+      const booleanArr = filterValue.map(value => {
+        if (value === "true") {
+          return true;
+        } else {
+          return false;
+        }
+      });
+
+      return JSON.stringify(booleanArr);
+    }
+
+    // If there is a null
+    if (filterValue.includes("null")) {
+      const withNullArr = filterValue.map(value => {
+        if (value === "null") {
+          return null;
+        } else {
+          return value;
+        }
+      });
+
+      return JSON.stringify(withNullArr);
+    }
+
+    if (Number.isInteger(Number(filterValue[0]))) {
+      const intArr = filterValue.map(value => {
+        return +value;
+      });
+
+      return JSON.stringify(intArr);
+    }
+
+    return JSON.stringify(filterValue);
+  }
+}
+
+/**
+ * For color as string, type as int foreign key values and is_active as true, false
+ * E.g. &color=["Blue"]&type=[2,5]&is_active=[true]
+ */
+const createApiFilterParamsString = () => {
+  let filterParams = "";
+
+  currentFilterValues.value.forEach((fieldValues: string[], fieldValuesIndex: number) => {
+    const fieldName = props.settings.list_filter[fieldValuesIndex];
+    const apiFieldValues = convertFilterValueToApiArrayData(fieldName!, fieldValues);
+
+    if (fieldValues.length > 0 && apiFieldValues) {
+      filterParams += `&${props.settings.list_filter[fieldValuesIndex]}=${apiFieldValues}`;
+    }
+  });
+
+  return filterParams;
+}
+
+const createApiFilterParamsObj = () => {
+  const obj: Record<string, string> = {};
+
+  currentFilterValues.value.forEach((fieldValues: string[], fieldValuesIndex: number) => {
+    const fieldName = props.settings.list_filter[fieldValuesIndex];
+    const apiFieldValues = convertFilterValueToApiArrayData(fieldName!, fieldValues);
+
+    if (fieldValues.length > 0 && apiFieldValues) {
+      obj[fieldName!] = apiFieldValues;
+    }
+  });
+
+  return obj ? obj : undefined;
+}
+
 const getNewData = async () => {
+  const filterParams = createApiFilterParamsObj();
+  
   listResults.value = await getModelListViewRequest(
     props.appName!,
     props.modelName!,
@@ -183,8 +322,40 @@ const getNewData = async () => {
       limit: props.settings.list_per_page,
       offset: offset.value,
       custom_search: searchQuery.value,
+      ...filterParams
     }
   );
+};
+
+const onCheckboxToggle = async (nextValue: string[], index: number) => {
+  // if all filters are unchecked, make current filter set to show All
+  if (nextValue.length === 0) {
+    currentFilterValues.value[index] = [ALL_VALUE];
+  } 
+
+  if (nextValue.length > 1) {
+    // if other filters except all then All was clicked
+    if (nextValue.at(-1) === ALL_VALUE) {
+      currentFilterValues.value[index] = [ALL_VALUE];
+    }
+
+    // if only All was the previous filter then another filter was added
+    if (nextValue[0] === ALL_VALUE) {
+      nextValue.splice(0, 1);
+      currentFilterValues.value[index] = nextValue;
+    }
+  }
+
+  router.push({
+    query: {
+      ...route.query,
+      ...createURLFilterParams()
+    }
+  });
+
+  console.log("api filter params", createApiFilterParamsString());
+
+  await getNewData();
 };
 
 const onSearch = async () => {
@@ -227,15 +398,84 @@ watch(
 
 <template>
   <div v-if="listResults" class="w-full">
-    <div class="border border-primary rounded-md my-2 p-2">
-      <SearchInput
-        v-model="searchQuery"
-        :placeholder="`Find ${modelName} ...`"
-        @search="onSearch"
-      />
-      <p class="text-xs my-1">
-        Search by {{ settings.search_fields.join(", ") }}
-      </p>
+    <div class="border border-primary rounded-md my-2 p-2 flex justify-between">
+      <div>
+        <SearchInput
+          v-model="searchQuery"
+          :placeholder="`Find ${modelName} ...`"
+          @search="onSearch"
+        />
+        <p class="text-xs my-1">
+          Search by {{ settings.search_fields.join(", ") }}
+        </p>
+      </div>
+      <div>
+        <USlideover>
+          <UButton
+            label="Filter"
+            color="primary"
+            variant="subtle"
+            class="cursor-pointer"
+          />
+
+          <template #content>
+            <h3 class="text-primary text-xl font-bold text-center my-1">
+              Filters
+            </h3>
+            <SidebarMenuItem>
+              <Collapsible
+                v-for="(filterField, index) in settings.list_filter"
+                :key="filterField"
+                default-open
+                class="group/collapsible"
+              >
+                <SidebarGroup class="py-0">
+                  <SidebarGroupLabel as-child>
+                    <CollapsibleTrigger
+                      class="bg-primary my-2 py-1 flex h-fit"
+                      @click="
+                        filterOpenStates[index] = !filterOpenStates[index]
+                      "
+                    >
+                      <div class="grow">
+                        <span class="font-bold text-white text-sm">
+                          {{ formatTitle(filterField) }}
+                        </span>
+                      </div>
+                      <div class="ml-auto">
+                        <ChevronUp
+                          v-if="filterOpenStates[index]"
+                          :class="{ 'rotate-180': !filterOpenStates[index] }"
+                          class="transition-transform cursor-pointer text-white"
+                          :size="18"
+                        />
+                        <ChevronDown
+                          v-if="!filterOpenStates[index]"
+                          :class="{ 'rotate-180': filterOpenStates[index] }"
+                          class="transition-transform cursor-pointer text-white"
+                          :size="18"
+                        />
+                      </div>
+                    </CollapsibleTrigger>
+                  </SidebarGroupLabel>
+
+                  <CollapsibleContent>
+                    <SidebarGroupContent v-if="filterOpenStates[index]">
+                      <SidebarMenu>
+                        <UCheckboxGroup
+                          v-model="currentFilterValues[index]"
+                          :items="getFilterValues(filterField)"
+                          @update:model-value="(newValue) => onCheckboxToggle(newValue, index)"
+                        />
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </CollapsibleContent>
+                </SidebarGroup>
+              </Collapsible>
+            </SidebarMenuItem>
+          </template>
+        </USlideover>
+      </div>
     </div>
 
     <div class="border border-primary rounded-md my-2 p-2">
@@ -278,7 +518,11 @@ watch(
           :items-per-page="settings.list_per_page"
           :total="listResults.count"
           size="xs"
-          @update:page="async (newPage) => { await onPageUpdate(newPage) }"
+          @update:page="
+            async (newPage) => {
+              await onPageUpdate(newPage);
+            }
+          "
         />
       </div>
     </div>

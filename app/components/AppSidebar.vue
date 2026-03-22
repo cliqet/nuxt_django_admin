@@ -31,7 +31,7 @@ const appOpenStates = ref(
               </div>
             </NuxtLink>
           </SidebarGroupLabel>
-          <SidebarGroupContent>
+          <SidebarGroupContent class="pb-10">
             <SidebarMenu>
               <SidebarMenuItem>
                 <Collapsible
@@ -42,7 +42,7 @@ const appOpenStates = ref(
                 >
                   <SidebarGroup class="py-0">
                     <SidebarGroupLabel as-child>
-                      <CollapsibleTrigger class="bg-primary my-2 py-1 flex h-fit">
+                      <CollapsibleTrigger class="bg-primary my-2 py-1 flex h-fit" @click="appOpenStates[index] = !appOpenStates[index]">
                         <div class="grow">
                           <span class="font-bold text-white text-sm">
                             {{ app.name }}
@@ -54,13 +54,12 @@ const appOpenStates = ref(
                             :class="{ 'rotate-180': !appOpenStates[index] }"
                             class="transition-transform cursor-pointer text-white"
                             :size="18"
-                            @click="appOpenStates[index] = false"
                           />
                           <ChevronDown
                             v-if="!appOpenStates[index]"
                             :class="{ 'rotate-180': appOpenStates[index] }"
                             class="transition-transform cursor-pointer text-white"
-                            @click="appOpenStates[index] = true"
+                            :size="18"
                           />
                         </div>
                       </CollapsibleTrigger>

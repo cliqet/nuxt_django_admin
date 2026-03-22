@@ -3,13 +3,7 @@ import type { BreadcrumbItem } from '@nuxt/ui';
 import { DashboardRoute } from '~/shared/constants/routes';
 
 const route = useRoute();
-
-const formatTitle = (str: string) => {
-  return str
-    .replace(/[_-]/g, ' ') // Replace underscores and hyphens with spaces
-    .toLowerCase()         // Optional: normalization to ensure consistent casing
-    .replace(/\b\w/g, (char) => char.toUpperCase()); // Capitalize every first letter
-};
+const { formatTitle } = useUtility();
 
 const items = computed<BreadcrumbItem[]>(() => {
   // Start with the fixed Home item
