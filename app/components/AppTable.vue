@@ -212,9 +212,17 @@ const getFilterValues = (fieldName: string) => {
   return [];
 };
 
-const initialFilterValues = props.settings.list_filter.map((_) => {
-  return [ALL_VALUE];
-});
+let initialFilterValues: string[][];
+if (route.query) {
+  initialFilterValues = [];
+  for (const [_, value] of Object.entries(route.query)) {
+    initialFilterValues.push(JSON.parse(value as string));
+  }
+} else {
+  initialFilterValues = props.settings.list_filter.map((_) => {
+    return [ALL_VALUE];
+  });
+}
 
 const currentFilterValues = ref<string[][]>(initialFilterValues);
 
@@ -326,6 +334,8 @@ const getNewData = async () => {
     }
   );
 };
+
+await getNewData();
 
 const onCheckboxToggle = async (nextValue: string[], index: number) => {
   // if all filters are unchecked, make current filter set to show All
