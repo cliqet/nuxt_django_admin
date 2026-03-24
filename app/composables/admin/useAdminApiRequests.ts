@@ -53,6 +53,18 @@ export const useAdminApiRequests = () => {
     }
   );
 
+  const runListviewAction = (
+    appLabel: string, modelName: string, funcName: string, pk_list: (string | number)[]
+  ) => privateApi<{ message: string }>(
+    `/model-listview-action/${appLabel}/${modelName}/${funcName}`,
+    {
+      method: "POST", 
+      body: {
+        payload: pk_list
+      }, 
+    }
+  );
+
   return {
     getAdminAppRequest,
     getModelListViewRequest,
@@ -61,5 +73,6 @@ export const useAdminApiRequests = () => {
     getModelFieldsEdit,
     addRecord,
     changeRecord,
+    runListviewAction,
   }
 }

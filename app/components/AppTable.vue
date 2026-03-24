@@ -11,6 +11,8 @@ import type {
 import { DashboardRoute } from "~/shared/constants/routes";
 import { useAdminApiRequests } from "~/composables/admin/useAdminApiRequests";
 import { ChevronDown, ChevronUp } from "lucide-vue-next";
+import { toast } from "vue-sonner";
+import { TOAST_ERROR_STYLE, TOAST_SUCCESS_STYLE } from "~/shared/constants/ui";
 
 // Nuxt UI & Vue Components
 const UCheckbox = resolveComponent("UCheckbox");
@@ -20,7 +22,7 @@ const UBadge = resolveComponent("UBadge");
 const router = useRouter();
 const route = useRoute();
 
-const { getModelListViewRequest, getModelFields } = useAdminApiRequests();
+const { getModelListViewRequest, getModelFields, runListviewAction } = useAdminApiRequests();
 const { formatTitle } = useUtility();
 
 export type PageChangeMetadata = {
@@ -198,8 +200,8 @@ const getFilterValues = (fieldName: string) => {
       if (item.label === "All") {
         return {
           value: ALL_VALUE,
-          label: item.label
-        }
+          label: item.label,
+        };
       } else {
         return {
           value: `${item.value}`,
@@ -231,14 +233,18 @@ const createURLFilterParams = () => {
 
   currentFilterValues.value.forEach((field, fieldIndex) => {
     if (field.length > 0) {
-      filterParams[props.settings.list_filter[fieldIndex] as string] = JSON.stringify(currentFilterValues.value[fieldIndex]); 
+      filterParams[props.settings.list_filter[fieldIndex] as string] =
+        JSON.stringify(currentFilterValues.value[fieldIndex]);
     }
   });
 
   return filterParams;
-}
+};
 
-const convertFilterValueToApiArrayData = (fieldName: string, filterValue: string[]) => {
+const convertFilterValueToApiArrayData = (
+  fieldName: string,
+  filterValue: string[]
+) => {
   // No filters
   if (filterValue.length < 1) {
     return "";
@@ -250,7 +256,7 @@ const convertFilterValueToApiArrayData = (fieldName: string, filterValue: string
 
     // If there is a "True" or "False"
     if (filterValue.includes("true") || filterValue.includes("false")) {
-      const booleanArr = filterValue.map(value => {
+      const booleanArr = filterValue.map((value) => {
         if (value === "true") {
           return true;
         } else {
@@ -263,7 +269,7 @@ const convertFilterValueToApiArrayData = (fieldName: string, filterValue: string
 
     // If there is a null
     if (filterValue.includes("null")) {
-      const withNullArr = filterValue.map(value => {
+      const withNullArr = filterValue.map((value) => {
         if (value === "null") {
           return null;
         } else {
@@ -275,7 +281,7 @@ const convertFilterValueToApiArrayData = (fieldName: string, filterValue: string
     }
 
     if (Number.isInteger(Number(filterValue[0]))) {
-      const intArr = filterValue.map(value => {
+      const intArr = filterValue.map((value) => {
         return +value;
       });
 
@@ -284,7 +290,7 @@ const convertFilterValueToApiArrayData = (fieldName: string, filterValue: string
 
     return JSON.stringify(filterValue);
   }
-}
+};
 
 /**
  * For color as string, type as int foreign key values and is_active as true, false
@@ -293,36 +299,46 @@ const convertFilterValueToApiArrayData = (fieldName: string, filterValue: string
 const createApiFilterParamsString = () => {
   let filterParams = "";
 
-  currentFilterValues.value.forEach((fieldValues: string[], fieldValuesIndex: number) => {
-    const fieldName = props.settings.list_filter[fieldValuesIndex];
-    const apiFieldValues = convertFilterValueToApiArrayData(fieldName!, fieldValues);
+  currentFilterValues.value.forEach(
+    (fieldValues: string[], fieldValuesIndex: number) => {
+      const fieldName = props.settings.list_filter[fieldValuesIndex];
+      const apiFieldValues = convertFilterValueToApiArrayData(
+        fieldName!,
+        fieldValues
+      );
 
-    if (fieldValues.length > 0 && apiFieldValues) {
-      filterParams += `&${props.settings.list_filter[fieldValuesIndex]}=${apiFieldValues}`;
+      if (fieldValues.length > 0 && apiFieldValues) {
+        filterParams += `&${props.settings.list_filter[fieldValuesIndex]}=${apiFieldValues}`;
+      }
     }
-  });
+  );
 
   return filterParams;
-}
+};
 
 const createApiFilterParamsObj = () => {
   const obj: Record<string, string> = {};
 
-  currentFilterValues.value.forEach((fieldValues: string[], fieldValuesIndex: number) => {
-    const fieldName = props.settings.list_filter[fieldValuesIndex];
-    const apiFieldValues = convertFilterValueToApiArrayData(fieldName!, fieldValues);
+  currentFilterValues.value.forEach(
+    (fieldValues: string[], fieldValuesIndex: number) => {
+      const fieldName = props.settings.list_filter[fieldValuesIndex];
+      const apiFieldValues = convertFilterValueToApiArrayData(
+        fieldName!,
+        fieldValues
+      );
 
-    if (fieldValues.length > 0 && apiFieldValues) {
-      obj[fieldName!] = apiFieldValues;
+      if (fieldValues.length > 0 && apiFieldValues) {
+        obj[fieldName!] = apiFieldValues;
+      }
     }
-  });
+  );
 
   return obj ? obj : undefined;
-}
+};
 
 const getNewData = async () => {
   const filterParams = createApiFilterParamsObj();
-  
+
   listResults.value = await getModelListViewRequest(
     props.appName!,
     props.modelName!,
@@ -330,7 +346,7 @@ const getNewData = async () => {
       limit: props.settings.list_per_page,
       offset: offset.value,
       custom_search: searchQuery.value,
-      ...filterParams
+      ...filterParams,
     }
   );
 };
@@ -341,7 +357,7 @@ const onCheckboxToggle = async (nextValue: string[], index: number) => {
   // if all filters are unchecked, make current filter set to show All
   if (nextValue.length === 0) {
     currentFilterValues.value[index] = [ALL_VALUE];
-  } 
+  }
 
   if (nextValue.length > 1) {
     // if other filters except all then All was clicked
@@ -359,8 +375,8 @@ const onCheckboxToggle = async (nextValue: string[], index: number) => {
   router.push({
     query: {
       ...route.query,
-      ...createURLFilterParams()
-    }
+      ...createURLFilterParams(),
+    },
   });
 
   console.log("api filter params", createApiFilterParamsString());
@@ -404,6 +420,33 @@ watch(
   },
   { deep: true }
 );
+
+const currentAction = ref("");
+
+const onRunAction = async () => {
+  if (rowsSelected.value.length === 0) {
+    toast("Table Action Error", {
+      description: "You must select at least 1 record",
+      style: TOAST_ERROR_STYLE,
+    });
+  } else {
+    const response = await runListviewAction(
+      props.appName!,
+      props.modelName!,
+      currentAction.value,
+      rowsSelected.value
+    );
+
+    toast("Table Action", {
+      description: response.message,
+      style: TOAST_SUCCESS_STYLE,
+    });
+
+    currentAction.value = "";
+    rowsSelected.value = [];
+    await getNewData();
+  }
+}
 </script>
 
 <template>
@@ -475,7 +518,9 @@ watch(
                         <UCheckboxGroup
                           v-model="currentFilterValues[index]"
                           :items="getFilterValues(filterField)"
-                          @update:model-value="(newValue) => onCheckboxToggle(newValue, index)"
+                          @update:model-value="
+                            (newValue) => onCheckboxToggle(newValue, index)
+                          "
                         />
                       </SidebarMenu>
                     </SidebarGroupContent>
@@ -486,6 +531,38 @@ watch(
           </template>
         </USlideover>
       </div>
+    </div>
+
+    <div class="border border-primary rounded-md my-2 p-2 flex gap-2">
+      <Select
+        v-model="currentAction"
+      >
+        <SelectTrigger
+          class="w-45"
+          @click="() => {}"
+        >
+          <SelectValue :placeholder="'Select an action'" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            <SelectItem
+              v-for="action in settings.custom_actions"
+              :key="action.func"
+              :value="action.func"
+            >
+              {{ action.label }}
+            </SelectItem>
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+      <Button
+        class="cursor-pointer"
+        type="button"
+        :disabled="!currentAction"
+        @click="onRunAction"
+      >
+        Go
+      </Button>
     </div>
 
     <div class="border border-primary rounded-md my-2 p-2">
