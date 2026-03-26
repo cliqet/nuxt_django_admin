@@ -10,14 +10,16 @@ import type {
 } from "~/shared/types/app";
 import { DashboardRoute } from "~/shared/constants/routes";
 import { useAdminApiRequests } from "~/composables/admin/useAdminApiRequests";
-
+import { toast } from "vue-sonner";
+import { TOAST_ERROR_STYLE, TOAST_SUCCESS_STYLE } from "~/shared/constants/ui";
 
 // Nuxt UI & Vue Components
 const UCheckbox = resolveComponent("UCheckbox");
 const NuxtLink = resolveComponent("NuxtLink");
 const UBadge = resolveComponent("UBadge");
 
-const { getModelListViewRequest, getModelFields } = useAdminApiRequests();
+const { getModelListViewRequest, getModelFields, runListviewAction } =
+  useAdminApiRequests();
 
 export type PageChangeMetadata = {
   currentPage: number;
@@ -177,7 +179,6 @@ const listResults = ref<ListviewDataType>(
   })
 );
 
-
 const getNewData = async () => {
   listResults.value = await getModelListViewRequest(
     props.appName!,
@@ -223,57 +224,102 @@ watch(
   { deep: true }
 );
 
+const onDelete = async () => {
+  if (rowsSelected.value.length === 0) {
+    toast("Table Action Error", {
+      description: "You must select at least 1 record",
+      style: TOAST_ERROR_STYLE,
+    });
+  } else {
+    const response = await runListviewAction(
+      props.appName!,
+      props.modelName!,
+      "delete",
+      rowsSelected.value
+    );
 
+    toast("Table Action", {
+      description: response.message,
+      style: TOAST_SUCCESS_STYLE,
+    });
+
+    rowsSelected.value = [];
+    await getNewData();
+  }
+};
 </script>
 
 <template>
   <div v-if="listResults" class="w-full">
-    <div class="border border-primary rounded-md my-2 p-2">
-      <UTable
-        ref="tableApiRef"
-        :data="listResults.results"
-        :columns="columns"
-        :get-row-id="(row) => row.pk"
-        sticky
-        class="min-h-75"
-      >
-        <!-- Fallback for empty states -->
-        <template #empty-state>
-          <div class="flex flex-col items-center justify-center py-10 gap-3">
-            <span class="text-sm text-muted"
-              >No {{ settings.model_name }} found.</span
-            >
-          </div>
-        </template>
-      </UTable>
-
-      <div
-        class="px-4 py-3 border-t border-primary/10 flex flex-col sm:flex-row gap-4 justify-between items-center bg-muted/5"
-      >
-        <div class="text-xs text-muted">
-          <!-- Summary logic -->
-          Selected:
-          {{
-            tableApiRef?.tableApi?.getFilteredSelectedRowModel().rows.length ||
-            0
-          }}
-          of {{ listResults.results.length }}
-        </div>
-
-        <div class="text-xs text-muted">
-          Total records: {{ listResults.count }}
-        </div>
-
-        <UPagination
-          :items-per-page="settings.list_per_page"
-          :total="listResults.count"
-          size="xs"
-          @update:page="
-            async (newPage) => {
-              await onPageUpdate(newPage);
+    <div class="flex gap-3 border border-primary rounded-md my-2 p-2">
+      <Button
+        class="cursor-pointer"
+        @click="
+          navigateTo(
+            `${DashboardRoute.DashboardHome}/${appName}/${modelName}/add`,
+            {
+              open: { target: '_blank' },
             }
-          "
-        />
+          )
+        "
+        >Add</Button
+      >
+      <Button 
+        class="cursor-pointer bg-red-500" 
+        :disabled="rowsSelected.length === 0"
+        @click="onDelete"
+      >Delete</Button
+      >
+    </div>
+
+    <div class="mb-10">
+      <div class="border border-primary rounded-md my-2 p-2">
+        <UTable
+          ref="tableApiRef"
+          :data="listResults.results"
+          :columns="columns"
+          :get-row-id="(row) => row.pk"
+          sticky
+          class="min-h-75"
+        >
+          <!-- Fallback for empty states -->
+          <template #empty-state>
+            <div class="flex flex-col items-center justify-center py-10 gap-3">
+              <span class="text-sm text-muted"
+                >No {{ settings.model_name }} found.</span
+              >
+            </div>
+          </template>
+        </UTable>
+
+        <div
+          class="px-4 py-3 border-t border-primary/10 flex flex-col sm:flex-row gap-4 justify-between items-center bg-muted/5"
+        >
+          <div class="text-xs text-muted">
+            <!-- Summary logic -->
+            Selected:
+            {{
+              tableApiRef?.tableApi?.getFilteredSelectedRowModel().rows
+                .length || 0
+            }}
+            of {{ listResults.results.length }}
+          </div>
+
+          <div class="text-xs text-muted">
+            Total records: {{ listResults.count }}
+          </div>
+
+          <UPagination
+            :items-per-page="settings.list_per_page"
+            :total="listResults.count"
+            size="xs"
+            @update:page="
+              async (newPage) => {
+                await onPageUpdate(newPage);
+              }
+            "
+          />
+        </div>
       </div>
     </div>
   </div>

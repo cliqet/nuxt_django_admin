@@ -353,7 +353,7 @@ const getNewData = async () => {
 
 await getNewData();
 
-const onCheckboxToggle = async (nextValue: string[], index: number) => {
+const onFilterCheckboxToggle = async (nextValue: string[], index: number) => {
   // if all filters are unchecked, make current filter set to show All
   if (nextValue.length === 0) {
     currentFilterValues.value[index] = [ALL_VALUE];
@@ -519,7 +519,7 @@ const onRunAction = async () => {
                           v-model="currentFilterValues[index]"
                           :items="getFilterValues(filterField)"
                           @update:model-value="
-                            (newValue) => onCheckboxToggle(newValue, index)
+                            (newValue) => onFilterCheckboxToggle(newValue, index)
                           "
                         />
                       </SidebarMenu>

@@ -147,31 +147,22 @@ const clearFieldError = (fieldName: string) => {
       class="my-2"
     >
       <div class="bg-primary rounded-t-lg p-2">
-        <h3>{{ inline.model_name_label }}</h3>
+        <h3 class="text-white font-bold">
+          <NuxtLink
+            :to="`${DashboardRoute.DashboardHome}/${inline.app_label}/${inline.model_name}`"
+            target="_blank"
+          >
+            {{ inline.model_name_label }}
+          </NuxtLink>
+        </h3>
       </div>
-      <div class="flex gap-3 border border-primary rounded-md my-2 p-2">
-        <Button
-          class="cursor-pointer"
-          @click="
-            navigateTo(
-              `${DashboardRoute.DashboardHome}/${inline.app_label}/${inline.model_name}/add`,
-              {
-                open: { target: '_blank' }
-              }
-            )
-          "
-          >Add</Button
-        >
-        <Button class="cursor-pointer bg-red-500">Delete</Button>
-      </div>
-      <div class="mb-10">
-        <AppInlineTable
-          :settings="inline"
-          :app-name="inline.app_label"
-          :model-name="inline.model_name"
-          @table_event="() => {}"
-        />
-      </div>
+
+      <AppInlineTable
+        :settings="inline"
+        :app-name="inline.app_label"
+        :model-name="inline.model_name"
+        @table_event="() => {}"
+      />
     </div>
 
     <SaveFormButtons

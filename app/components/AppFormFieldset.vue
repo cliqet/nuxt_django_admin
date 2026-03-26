@@ -29,7 +29,7 @@ const modelValue = defineModel<Record<string, any>>({ required: true });
         @click="isCollapsed = !isCollapsed"
       >
         <span
-          class="font-bold text-sm uppercase tracking-wider text-gray-700 dark:text-gray-300"
+          class="font-bold text-sm uppercase tracking-wider text-white"
         >
           {{ title }}
         </span>
