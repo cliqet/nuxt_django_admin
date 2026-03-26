@@ -4,7 +4,11 @@ import { useAdminApiRequests } from "~/composables/admin/useAdminApiRequests";
 import { useModelFormValidation } from "~/composables/admin/useModelFormValidation";
 import { DashboardRoute } from "~/shared/constants/routes";
 import { TOAST_SUCCESS_STYLE } from "~/shared/constants/ui";
-import type { ModelAdminSettingsType, ModelFieldType, SaveType } from "~/shared/types/app";
+import type {
+  ModelAdminSettingsType,
+  ModelFieldType,
+  SaveType,
+} from "~/shared/types/app";
 
 const route = useRoute();
 const routeSegments = ref(route.path.split("/"));
@@ -12,24 +16,30 @@ const appName = ref(routeSegments.value.at(-4));
 const modelName = ref(routeSegments.value.at(-3));
 const pk = ref(routeSegments.value.at(-2));
 
-const { 
-  isFieldValueValid, 
-  convertModelFieldValuesToFormData, 
-  mapModelFieldValues 
+const {
+  isFieldValueValid,
+  convertModelFieldValuesToFormData,
+  mapModelFieldValues,
 } = useModelFormValidation();
-const { 
-  getModelAdminSettings, 
-  getModelFieldsEdit, 
-  changeRecord 
-} = useAdminApiRequests();
+const { getModelAdminSettings, getModelFieldsEdit, changeRecord } =
+  useAdminApiRequests();
 
 const formRef = ref<HTMLFormElement | null>(null);
 const formErrors = ref<Record<string, string>>({});
 
-const modelAdminSettingsResponse = await getModelAdminSettings(appName.value!, modelName.value!, pk.value!);
-const modelAdminSettings: ModelAdminSettingsType = modelAdminSettingsResponse.model_admin_settings;
+const modelAdminSettingsResponse = await getModelAdminSettings(
+  appName.value!,
+  modelName.value!,
+  pk.value!
+);
+const modelAdminSettings: ModelAdminSettingsType =
+  modelAdminSettingsResponse.model_admin_settings;
 
-const modelFieldsResponse = await getModelFieldsEdit(appName.value!, modelName.value!, pk.value!);
+const modelFieldsResponse = await getModelFieldsEdit(
+  appName.value!,
+  modelName.value!,
+  pk.value!
+);
 const modelFields = modelFieldsResponse.fields;
 
 const fieldValues = mapModelFieldValues(modelFields);
@@ -38,14 +48,14 @@ const modelFieldValues = ref(fieldValues);
 const scrollToTop = () => {
   if (formRef.value) {
     // smooth scrolling makes for a better user experience
-    formRef.value.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    formRef.value.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 };
 
 const handleSave = async (saveType: SaveType) => {
   let hasFormError = false;
 
-  Object.keys(modelFields).forEach(key => {
+  Object.keys(modelFields).forEach((key) => {
     const field = modelFields[key] as ModelFieldType;
     const validity = isFieldValueValid(field, modelFieldValues.value[key]);
     if (!validity.isValid) {
@@ -79,7 +89,6 @@ const handleSave = async (saveType: SaveType) => {
       return;
     }
 
-
     if (response.message) {
       toast(`Record ${pk.value} Changed`, {
         description: response.message,
@@ -90,17 +99,17 @@ const handleSave = async (saveType: SaveType) => {
 
       if (saveType === "SAVE") {
         navigateTo(
-          `${DashboardRoute.DashboardHome}/${appName.value}/${modelName.value}`, 
+          `${DashboardRoute.DashboardHome}/${appName.value}/${modelName.value}`,
           { replace: true }
         );
       } else if (saveType === "SAVE_AND_ADD") {
         navigateTo(
-          `${DashboardRoute.DashboardHome}/${appName.value}/${modelName.value}/add`, 
+          `${DashboardRoute.DashboardHome}/${appName.value}/${modelName.value}/add`,
           { replace: true }
         );
-      } 
+      }
       // stay on form if continue
-    } 
+    }
   } else {
     scrollToTop();
   }
@@ -112,7 +121,7 @@ const clearFieldError = (fieldName: string) => {
 </script>
 
 <template>
-  <form ref="formRef" novalidate="true" class="pb-10" @submit.prevent="">
+  <form ref="formRef" novalidate="true" class="pb-20" @submit.prevent="">
     <div class="flex items-center">
       <h3 class="text-lg">Change {{ modelName }}</h3>
     </div>
@@ -122,7 +131,7 @@ const clearFieldError = (fieldName: string) => {
       :key="fieldset.title"
       class="my-1 py-2"
     >
-      <AppFormFieldset 
+      <AppFormFieldset
         v-model="modelFieldValues"
         :title="fieldset.title"
         :fieldset-fields="fieldset.fields"
@@ -130,6 +139,39 @@ const clearFieldError = (fieldName: string) => {
         :form-errors="formErrors"
         @clear-error="clearFieldError"
       />
+    </div>
+
+    <div
+      v-for="inline in modelAdminSettings.custom_inlines"
+      :key="inline.model_name_label"
+      class="my-2"
+    >
+      <div class="bg-primary rounded-t-lg p-2">
+        <h3>{{ inline.model_name_label }}</h3>
+      </div>
+      <div class="flex gap-3 border border-primary rounded-md my-2 p-2">
+        <Button
+          class="cursor-pointer"
+          @click="
+            navigateTo(
+              `${DashboardRoute.DashboardHome}/${inline.app_label}/${inline.model_name}/add`,
+              {
+                open: { target: '_blank' }
+              }
+            )
+          "
+          >Add</Button
+        >
+        <Button class="cursor-pointer bg-red-500">Delete</Button>
+      </div>
+      <div class="mb-10">
+        <AppInlineTable
+          :settings="inline"
+          :app-name="inline.app_label"
+          :model-name="inline.model_name"
+          @table_event="() => {}"
+        />
+      </div>
     </div>
 
     <SaveFormButtons

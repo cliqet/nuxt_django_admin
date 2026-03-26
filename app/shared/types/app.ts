@@ -168,6 +168,14 @@ export type CustomInlineType = {
   table_header: string;
 }
 
+export type InlineModelAdminSettingsType = {
+  model_name: string;
+  app_label: string;
+  list_display: string[];
+  list_display_links: string[];
+  list_per_page: number;
+}
+
 export type ModelAdminSettingsType = {
   model_name: string;
   app_label: string;
