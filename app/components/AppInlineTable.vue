@@ -37,11 +37,17 @@ const props = defineProps<{
   settings: InlineModelAdminSettingsType;
   appName: string;
   modelName: string;
+  isAddFormOpen: boolean;
 }>();
 
 const emit = defineEmits<{
-  (e: "table_event", payload: TableEventType): void;
+  (e: "openState", isOpen: boolean): void;
 }>();
+
+const isDrawerOpen = computed({
+  get: () => props.isAddFormOpen,
+  set: (val) => emit("openState", val)
+});
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const tableApiRef = useTemplateRef<any>("tableApiRef");
@@ -195,11 +201,6 @@ await getNewData();
 const onPageUpdate = async (newPage: number) => {
   currentPage.value = newPage;
   await getNewData();
-
-  emit("table_event", {
-    event: "page_change",
-    metadata: { currentPage: newPage },
-  });
 };
 
 // 1. Watch for Row Selection (Ordered)
@@ -215,11 +216,6 @@ watch(
       .rows.map((row: any) => row.id);
 
     rowsSelected.value = selectedPks;
-
-    emit("table_event", {
-      event: "row_selected",
-      metadata: { items: selectedPks },
-    });
   },
   { deep: true }
 );
@@ -252,7 +248,33 @@ const onDelete = async () => {
 <template>
   <div v-if="listResults" class="w-full">
     <div class="flex gap-3 border border-primary rounded-md my-2 p-2">
-      <Button
+      <UDrawer
+        v-model:open="isDrawerOpen"
+      >
+        <UButton
+          label="Add"
+          color="primary"
+          variant="solid"
+          trailing-icon="i-lucide-chevron-up"
+          class="text-white"
+          @click="emit('openState', true)"
+        />
+        <template #content>
+          <AppInlineAddForm
+          v-if="isDrawerOpen" 
+          :app-name="appName"
+          :model-name="modelName"
+          :is-open="isDrawerOpen"
+          @open-state="(val) => isDrawerOpen = val"
+          @success="async () => {
+            currentPage = 1;
+            await getNewData();
+          }"
+        />
+        </template>
+      </UDrawer>
+
+      <!-- <Button
         class="cursor-pointer"
         @click="
           navigateTo(
@@ -263,12 +285,12 @@ const onDelete = async () => {
           )
         "
         >Add</Button
-      >
-      <Button 
-        class="cursor-pointer bg-red-500" 
+      > -->
+      <Button
+        class="cursor-pointer bg-red-500"
         :disabled="rowsSelected.length === 0"
         @click="onDelete"
-      >Delete</Button
+        >Delete</Button
       >
     </div>
 
@@ -310,6 +332,7 @@ const onDelete = async () => {
           </div>
 
           <UPagination
+            v-model:page="currentPage"
             :items-per-page="settings.list_per_page"
             :total="listResults.count"
             size="xs"

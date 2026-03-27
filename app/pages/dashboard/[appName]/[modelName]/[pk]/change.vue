@@ -118,6 +118,11 @@ const handleSave = async (saveType: SaveType) => {
 const clearFieldError = (fieldName: string) => {
   formErrors.value[fieldName] = "";
 };
+
+const initialAddOpenFormState = modelAdminSettings.custom_inlines.map(_ => {
+  return false
+})
+const addFormOpenState = ref(initialAddOpenFormState);
 </script>
 
 <template>
@@ -142,7 +147,7 @@ const clearFieldError = (fieldName: string) => {
     </div>
 
     <div
-      v-for="inline in modelAdminSettings.custom_inlines"
+      v-for="(inline, inlineIndex) in modelAdminSettings.custom_inlines"
       :key="inline.model_name_label"
       class="my-2"
     >
@@ -161,7 +166,9 @@ const clearFieldError = (fieldName: string) => {
         :settings="inline"
         :app-name="inline.app_label"
         :model-name="inline.model_name"
+        :is-add-form-open="addFormOpenState[inlineIndex]!"
         @table_event="() => {}"
+        @open-state="(isOpen: boolean) => addFormOpenState[inlineIndex] = isOpen"
       />
     </div>
 
