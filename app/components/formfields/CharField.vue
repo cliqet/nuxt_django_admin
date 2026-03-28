@@ -27,7 +27,7 @@ const modelValue = defineModel<any>({
       :class="{
          'border-red-500': errorMessage
       }"
-      type="text"
+      :type="field.name === 'password' ? 'password' : 'text'"
       autocomplete="off"
       @focus="emit('clear-error')" 
     />
