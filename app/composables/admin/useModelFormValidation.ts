@@ -66,6 +66,14 @@ export const useModelFormValidation = () => {
   ): FieldValueValidityType => {
     const label = modelField.label;
 
+    // If it is auto-created in the db
+    if (
+      modelField.auto_created || 
+      ["uid", "id", "pk", "created_at", "updated_at"].includes(modelField.name)
+    ) {
+      return { isValid: true, message: "" };
+    }
+
     // 1. Handle Null/Undefined/Empty for Required Fields
     const isEmpty = value === null || value === undefined || value === "";
     const isFileRequiredButHasInitial = (
@@ -281,6 +289,10 @@ export const useModelFormValidation = () => {
     Object.keys(values).forEach((key) => {
       const value = values[key];
       const fieldType = modelFields[key]?.type;
+      const autoCreatedField = (
+        modelFields[key]?.auto_created || 
+        ["uid", "id", "pk"].includes(modelFields[key]?.name as string)
+      );
 
       if (fieldType === "ImageField" || fieldType === "FileField") {
         // BE: If value == '', it skips processing (not required)
@@ -297,6 +309,8 @@ export const useModelFormValidation = () => {
         // BE: many_to_many_data[key] = value.split(',')
         // So we must send a comma-separated string
         formData.append(key, value.join(","));
+      } else if (autoCreatedField) {
+        // Do not include in form data
       } else {
         if (value !== null && value !== undefined) {
           formData.append(key, value);
