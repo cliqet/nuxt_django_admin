@@ -1,15 +1,22 @@
 import { defineStore } from "pinia";
-import type { User } from "~/shared/types/user";
+import type { User, UserPermissions } from "~/shared/types/user";
 
 export const useUserStore = defineStore('user', () => {
   const user = ref<User | null>(null);
+  const userPermissions = ref<UserPermissions>({});
 
   function setUser (userPayload: User | null) {
     user.value = userPayload;
   }
 
+  function setUserPermissions(permissions: UserPermissions) {
+    userPermissions.value = permissions;
+  }
+
   return {
     user,
-    setUser
+    userPermissions,
+    setUser,
+    setUserPermissions,
   }
 })

@@ -1,9 +1,15 @@
 <script setup lang="ts">
 import type { BreadcrumbItem } from '@nuxt/ui';
+import { useAdminApiRequests } from '~/composables/admin/useAdminApiRequests';
 import { DashboardRoute } from '~/shared/constants/routes';
 
 const route = useRoute();
 const { formatTitle } = useUtility();
+const { setUserPermissions, user } = useUserStore();
+const { getUserPermissions } = useAdminApiRequests();
+
+const response = await getUserPermissions(user?.uid ?? "");
+setUserPermissions(response.permissions);
 
 const items = computed<BreadcrumbItem[]>(() => {
   // Start with the fixed Home item

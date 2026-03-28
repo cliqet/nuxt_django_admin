@@ -40,7 +40,10 @@ const appOpenStates = ref(
                   default-open
                   class="group/collapsible"
                 >
-                  <SidebarGroup class="py-0">
+                  <SidebarGroup  
+                    v-if="app.hasModulePerms"
+                    class="py-0"
+                  >
                     <SidebarGroupLabel as-child>
                       <CollapsibleTrigger class="bg-primary my-2 py-1 flex h-fit" @click="appOpenStates[index] = !appOpenStates[index]">
                         <div class="grow">
@@ -73,6 +76,7 @@ const appOpenStates = ref(
                             class="flex justify-between"
                           >
                             <SidebarMenuButton
+                              v-if="model.perms.view"
                               as-child
                               class="min-h-6 h-auto py-1 flex"
                             >
@@ -85,7 +89,10 @@ const appOpenStates = ref(
                                 }}</span>
                               </NuxtLink>
                             </SidebarMenuButton>
-                            <div class="flex items-center justify-center">
+                            <div
+                              v-if="model.perms.add" 
+                              class="flex items-center justify-center"
+                            >
                               <NuxtLink :href="model.addUrl">
                                 <Icon
                                   size="18"

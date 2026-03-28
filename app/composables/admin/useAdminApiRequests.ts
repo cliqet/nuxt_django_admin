@@ -1,5 +1,6 @@
 import type { AppListType, ListviewDataType, ModelAdminSettingsType, ModelFieldType } from "~/shared/types/app";
 import type { AddRecordResponse } from "~/shared/types/pages/addRecord";
+import type { UserPermissions } from "~/shared/types/user";
 
 export const useAdminApiRequests = () => {
   const { privateApi } = useApiClients();
@@ -65,6 +66,10 @@ export const useAdminApiRequests = () => {
     }
   );
 
+  const getUserPermissions = (userId: string) => privateApi<{ permissions: UserPermissions}>(
+    `/users/${userId}`,
+  );
+
   return {
     getAdminAppRequest,
     getModelListViewRequest,
@@ -74,5 +79,6 @@ export const useAdminApiRequests = () => {
     addRecord,
     changeRecord,
     runListviewAction,
+    getUserPermissions,
   }
 }
