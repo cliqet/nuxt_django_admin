@@ -8,7 +8,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="flex gap-2 border border-primary rounded-md my-6 p-2 w-fit">
+  <div class="flex flex-col sm:flex-row gap-2 border border-primary rounded-md my-6 p-2 w-full sm:w-fit">
     <Button class="cursor-pointer" @click="emit('save')">
       SAVE
     </Button>

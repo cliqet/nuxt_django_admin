@@ -46,7 +46,7 @@ const emit = defineEmits<{
 
 const isDrawerOpen = computed({
   get: () => props.isAddFormOpen,
-  set: (val) => emit("openState", val)
+  set: (val) => emit("openState", val),
 });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -63,6 +63,14 @@ const modelFieldsResponse = await getModelFields(
 );
 const modelFields = modelFieldsResponse.fields;
 
+const selectedChangePk = ref<string | number | null>(null);
+const isChangeDrawerOpen = ref(false);
+
+const openChangeDrawer = (pk: string | number) => {
+  selectedChangePk.value = pk;
+  isChangeDrawerOpen.value = true;
+};
+
 /**
  * Dynamic Column Construction
  * Generates table columns based on modelAdminSettings.list_display
@@ -74,6 +82,13 @@ const columns = computed(() => {
   // 1. Checkbox Selection Column
   dynamicCols.push({
     id: "select",
+    meta: {
+      class: {
+        // sticky left-0 pins it; w-10 keeps it narrow (40px)
+        th: "sticky left-0 bg-white dark:bg-slate-900 z-20 w-8 px-2",
+      td: "sticky left-0 bg-white dark:bg-slate-900 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)] w-8 px-2 group-hover:bg-primary-50/50 transition-colors"
+      },
+    },
     header: ({ table }) =>
       h(UCheckbox, {
         modelValue: table.getIsSomePageRowsSelected()
@@ -167,6 +182,36 @@ const columns = computed(() => {
     });
   });
 
+  // NEW: Action Column (Pencil Icon)
+  dynamicCols.push({
+    id: "actions",
+    header: "",
+    meta: {
+      class: {
+        // 'w-10' sets a tight 40px width; 'bg-white' or 'bg-slate-50' matches standard table backgrounds
+        // Use 'dark:bg-slate-900' to support dark mode if applicable
+        th: "sticky right-0 bg-white dark:bg-slate-900 z-10 w-10",
+        td: "sticky right-0 bg-white dark:bg-slate-900 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)] w-10",
+      },
+    },
+    cell: ({ row }) =>
+      h("div", { class: "flex justify-end w-full" }, [
+        // Wrapper to push content to the right
+        h(resolveComponent("UButton"), {
+          icon: "i-lucide-pencil",
+          variant: "ghost",
+          color: "primary",
+          size: "xs",
+          square: true,
+          class: "cursor-pointer",
+          onClick: (e: MouseEvent) => {
+            e.stopPropagation(); // Prevents the click from triggering other row events
+            openChangeDrawer(row.original.pk);
+          },
+        }),
+      ]),
+  });
+
   return dynamicCols;
 });
 
@@ -248,44 +293,53 @@ const onDelete = async () => {
 <template>
   <div v-if="listResults" class="w-full">
     <div class="flex gap-3 border border-primary rounded-md my-2 p-2">
-      <UDrawer
-        v-model:open="isDrawerOpen"
-      >
+      <UDrawer v-model:open="isDrawerOpen">
         <UButton
           label="Add"
           color="primary"
           variant="solid"
           trailing-icon="i-lucide-chevron-up"
-          class="text-white"
+          class="text-white cursor-pointer"
           @click="emit('openState', true)"
         />
         <template #content>
           <AppInlineAddForm
-          v-if="isDrawerOpen" 
-          :app-name="appName"
-          :model-name="modelName"
-          :is-open="isDrawerOpen"
-          @open-state="(val) => isDrawerOpen = val"
-          @success="async () => {
-            currentPage = 1;
-            await getNewData();
-          }"
-        />
+            v-if="isDrawerOpen"
+            :app-name="appName"
+            :model-name="modelName"
+            :is-open="isDrawerOpen"
+            @open-state="(val) => (isDrawerOpen = val)"
+            @success="
+              async () => {
+                currentPage = 1;
+                await getNewData();
+              }
+            "
+          />
         </template>
       </UDrawer>
 
-      <!-- <Button
-        class="cursor-pointer"
-        @click="
-          navigateTo(
-            `${DashboardRoute.DashboardHome}/${appName}/${modelName}/add`,
-            {
-              open: { target: '_blank' },
-            }
-          )
+      <UDrawer
+        v-model:open="isChangeDrawerOpen"
+        @update:open="
+          (val) => {
+            if (!val) selectedChangePk = null;
+          }
         "
-        >Add</Button
-      > -->
+      >
+        <template #content>
+          <AppInlineChangeForm
+            v-if="isChangeDrawerOpen && selectedChangePk"
+            :app-name="appName"
+            :model-name="modelName"
+            :pk="selectedChangePk"
+            :is-open="isChangeDrawerOpen"
+            @open-state="(val) => (isChangeDrawerOpen = val)"
+            @success="getNewData"
+          />
+        </template>
+      </UDrawer>
+
       <Button
         class="cursor-pointer bg-red-500"
         :disabled="rowsSelected.length === 0"
@@ -303,6 +357,10 @@ const onDelete = async () => {
           :get-row-id="(row) => row.pk"
           sticky
           class="min-h-75"
+          :ui="{
+            // Directly apply the hover classes here
+            tr: 'hover:bg-primary-50/50 dark:hover:bg-primary-950/20 transition-colors duration-200',
+          }"
         >
           <!-- Fallback for empty states -->
           <template #empty-state>

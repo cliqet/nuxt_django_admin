@@ -11,6 +11,7 @@ import type {
 const props = defineProps<{
   appName: string;
   modelName: string;
+  pk: string | number;
   isOpen: boolean;
 }>();
 
@@ -24,31 +25,34 @@ const {
   convertModelFieldValuesToFormData,
   mapModelFieldValues,
 } = useModelFormValidation();
-const { getModelAdminSettings, getModelFields, addRecord } =
-  useAdminApiRequests();
+
+const { getModelAdminSettings, getModelFieldsEdit, changeRecord } = useAdminApiRequests();
 
 const formRef = ref<HTMLFormElement | null>(null);
 const formErrors = ref<Record<string, string>>({});
 
+// Fetch settings and the EXISTING record data
 const modelAdminSettingsResponse = await getModelAdminSettings(
   props.appName,
-  props.modelName
+  props.modelName,
+  props.pk.toString()
 );
 const modelAdminSettings: ModelAdminSettingsType =
   modelAdminSettingsResponse.model_admin_settings;
 
-const modelFieldsResponse = await getModelFields(
+const modelFieldsResponse = await getModelFieldsEdit(
   props.appName,
-  props.modelName
+  props.modelName,
+  props.pk.toString()
 );
 const modelFields = modelFieldsResponse.fields;
 
+// This helper maps the existing record values directly into the refs
 const fieldValues = mapModelFieldValues(modelFields);
 const modelFieldValues = ref(fieldValues);
 
 const scrollToTop = () => {
   if (formRef.value) {
-    // smooth scrolling makes for a better user experience
     formRef.value.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 };
@@ -71,7 +75,12 @@ const handleSave = async () => {
       modelFields
     );
 
-    const response = await addRecord(props.appName, props.modelName, formData);
+    const response = await changeRecord(
+      props.appName,
+      props.modelName,
+      formData,
+      props.pk.toString()
+    );
 
     const validationErrors = response.validation_error;
     if (validationErrors) {
@@ -81,20 +90,19 @@ const handleSave = async () => {
           formErrors.value[key] = validationErrors[key];
         }
       });
-
       return;
     }
 
-    if (response.pk) {
-      toast("New Record Added", {
+    if (response.message) {
+      toast("Record Updated", {
         description: response.message,
         style: TOAST_SUCCESS_STYLE,
       });
 
       await nextTick();
 
-      emit('openState', false);
-      emit('success');
+      emit('openState', false); // Close drawer
+      emit('success');          // Refresh table
     }
   } else {
     scrollToTop();
@@ -110,7 +118,7 @@ const clearFieldError = (fieldName: string) => {
   <div v-if="isOpen" class="overflow-y-auto px-3 pt-3 pb-20">
     <form ref="formRef" novalidate="true" class="pb-10" @submit.prevent="">
       <div class="flex items-center">
-        <h3 class="text-lg">Add {{ modelName }}</h3>
+        <h3 class="text-lg font-bold">Edit {{ modelName }} #{{ pk }}</h3>
       </div>
 
       <div
@@ -128,7 +136,10 @@ const clearFieldError = (fieldName: string) => {
         />
       </div>
 
-      <Button @click="handleSave">Save</Button>
+      <div class="flex gap-2">
+        <Button @click="handleSave">Save Changes</Button>
+        <Button variant="outline" @click="emit('openState', false)">Cancel</Button>
+      </div>
     </form>
   </div>
 </template>

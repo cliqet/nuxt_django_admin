@@ -22,7 +22,8 @@ const UBadge = resolveComponent("UBadge");
 const router = useRouter();
 const route = useRoute();
 
-const { getModelListViewRequest, getModelFields, runListviewAction } = useAdminApiRequests();
+const { getModelListViewRequest, getModelFields, runListviewAction } =
+  useAdminApiRequests();
 const { formatTitle } = useUtility();
 
 export type PageChangeMetadata = {
@@ -72,6 +73,13 @@ const columns = computed(() => {
   // 1. Checkbox Selection Column
   dynamicCols.push({
     id: "select",
+    meta: {
+      class: {
+        // sticky left-0 pins it; w-10 keeps it narrow (40px)
+        th: "sticky left-0 bg-white dark:bg-slate-900 z-20 w-8 px-2",
+      td: "sticky left-0 bg-white dark:bg-slate-900 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)] w-8 px-2 group-hover:bg-primary-50/50 transition-colors"
+      },
+    },
     header: ({ table }) =>
       h(UCheckbox, {
         modelValue: table.getIsSomePageRowsSelected()
@@ -446,7 +454,7 @@ const onRunAction = async () => {
     rowsSelected.value = [];
     await getNewData();
   }
-}
+};
 </script>
 
 <template>
@@ -519,7 +527,8 @@ const onRunAction = async () => {
                           v-model="currentFilterValues[index]"
                           :items="getFilterValues(filterField)"
                           @update:model-value="
-                            (newValue) => onFilterCheckboxToggle(newValue, index)
+                            (newValue) =>
+                              onFilterCheckboxToggle(newValue, index)
                           "
                         />
                       </SidebarMenu>
@@ -534,13 +543,8 @@ const onRunAction = async () => {
     </div>
 
     <div class="border border-primary rounded-md my-2 p-2 flex gap-2">
-      <Select
-        v-model="currentAction"
-      >
-        <SelectTrigger
-          class="w-45"
-          @click="() => {}"
-        >
+      <Select v-model="currentAction">
+        <SelectTrigger class="w-45" @click="() => {}">
           <SelectValue :placeholder="'Select an action'" />
         </SelectTrigger>
         <SelectContent>
@@ -573,6 +577,10 @@ const onRunAction = async () => {
         :get-row-id="(row) => row.pk"
         sticky
         class="min-h-75"
+        :ui="{
+          // Directly apply the hover classes here
+          tr: 'hover:bg-primary-50/50 dark:hover:bg-primary-950/20 transition-colors duration-200',
+        }"
       >
         <!-- Fallback for empty states -->
         <template #empty-state>
