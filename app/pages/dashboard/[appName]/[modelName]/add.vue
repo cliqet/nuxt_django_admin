@@ -15,16 +15,21 @@ const routeSegments = ref(route.path.split("/"));
 const appName = ref(routeSegments.value.at(-3));
 const modelName = ref(routeSegments.value.at(-2));
 
-const { 
-  isFieldValueValid, 
+const { userPermissions } = useUserStore();
+
+const hasAddPermission = ref(false);
+const checkedPermission = Boolean(
+  userPermissions[appName.value!]?.[modelName.value!]?.perms["add"]
+);
+hasAddPermission.value = checkedPermission ?? false;
+
+const {
+  isFieldValueValid,
   convertModelFieldValuesToFormData,
-  mapModelFieldValues, 
+  mapModelFieldValues,
 } = useModelFormValidation();
-const { 
-  getModelAdminSettings, 
-  getModelFields, 
-  addRecord 
-} = useAdminApiRequests();
+const { getModelAdminSettings, getModelFields, addRecord } =
+  useAdminApiRequests();
 
 const formRef = ref<HTMLFormElement | null>(null);
 const formErrors = ref<Record<string, string>>({});
@@ -88,7 +93,6 @@ const handleSave = async (saveType: SaveType) => {
       return;
     }
 
-
     if (response.pk) {
       toast("New Record Added", {
         description: response.message,
@@ -99,21 +103,21 @@ const handleSave = async (saveType: SaveType) => {
 
       if (saveType === "SAVE") {
         navigateTo(
-          `${DashboardRoute.DashboardHome}/${appName.value}/${modelName.value}`, 
+          `${DashboardRoute.DashboardHome}/${appName.value}/${modelName.value}`,
           { replace: true }
         );
       } else if (saveType === "SAVE_AND_ADD") {
         // 1. Manually reset the form values back to initial
         modelFieldValues.value = mapModelFieldValues(modelFields);
-        
+
         // 2. Clear any lingering validation errors
         formErrors.value = {};
 
         // 3. Scroll the user back to the top of the new form
         scrollToTop();
-      } 
+      }
       // stay on form if continue
-    } 
+    }
   } else {
     scrollToTop();
   }
@@ -130,25 +134,31 @@ const clearFieldError = (fieldName: string) => {
       <h3 class="text-lg">Add {{ modelName }}</h3>
     </div>
 
-    <div
-      v-for="fieldset in modelAdminSettings.fieldsets"
-      :key="fieldset.title"
-      class="my-1 py-2"
-    >
-      <AppFormFieldset
-        v-model="modelFieldValues"
-        :title="fieldset.title"
-        :fieldset-fields="fieldset.fields"
-        :model-fields="modelFields"
-        :form-errors="formErrors"
-        @clear-error="clearFieldError"
+    <div v-if="hasAddPermission">
+      <div
+        v-for="fieldset in modelAdminSettings.fieldsets"
+        :key="fieldset.title"
+        class="my-1 py-2"
+      >
+        <AppFormFieldset
+          v-model="modelFieldValues"
+          :title="fieldset.title"
+          :fieldset-fields="fieldset.fields"
+          :model-fields="modelFields"
+          :form-errors="formErrors"
+          @clear-error="clearFieldError"
+        />
+      </div>
+
+      <SaveFormButtons
+        @save="handleSave('SAVE')"
+        @save-add="handleSave('SAVE_AND_ADD')"
+        @save-edit="handleSave('SAVE_AND_CONTINUE')"
       />
     </div>
 
-    <SaveFormButtons
-      @save="handleSave('SAVE')"
-      @save-add="handleSave('SAVE_AND_ADD')"
-      @save-edit="handleSave('SAVE_AND_CONTINUE')"
-    />
+    <div v-if="!hasAddPermission" class="flex items-center">
+      <h3 class="text-xl">You have no permission to add</h3>
+    </div>
   </form>
 </template>

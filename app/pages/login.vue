@@ -13,8 +13,7 @@ definePageMeta({
 
 const route = useRoute();
 
-const userStore = useUserStore();
-
+const { setUser } = useUserStore();
 const { loginRequest } = useAuthenticationApiRequests();
 
 const loginForm = ref({
@@ -38,7 +37,7 @@ const handleLogin = async () => {
   const response = await loginRequest(loginForm.value);
 
   const tokenPayload: TokenPayload = jwtDecode(response.access);
-  userStore.setUser(tokenPayload);
+  setUser(tokenPayload);
   localStorage.setItem(ACCESS_TOKEN_KEY, response.access);
 
   const redirectPath: string = route.query.redirect as string;

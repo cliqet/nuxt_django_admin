@@ -1,10 +1,10 @@
 import { jwtDecode } from "jwt-decode";
 import { ACCESS_TOKEN_KEY } from "~/shared/constants/app";
-import { PublicRoute } from "~/shared/constants/routes";
+import { DashboardRoute, PublicRoute } from "~/shared/constants/routes";
 import type { TokenPayload } from "~/shared/types/user";
 
 export default defineNuxtRouteMiddleware((to, _) => {
-  const userStore = useUserStore();
+  const { setUser } = useUserStore();
 
   const token = localStorage.getItem(ACCESS_TOKEN_KEY);
 
@@ -19,10 +19,10 @@ export default defineNuxtRouteMiddleware((to, _) => {
       const tokenPayload: TokenPayload = jwtDecode(token);
 
       // Set user in the store
-      userStore.setUser(tokenPayload);
+      setUser(tokenPayload);
 
       if ([PublicRoute.Login as string].includes(to.fullPath)) {
-        return navigateTo("/console");
+        return navigateTo(DashboardRoute.DashboardHome);
       }
     } catch (err) {
       console.error("Error", err);

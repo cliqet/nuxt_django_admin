@@ -9,6 +9,13 @@ const appName = ref(routeSegments.value.at(-2));
 const modelName = ref(routeSegments.value.at(-1));
 
 const { getModelAdminSettings } = useAdminApiRequests();
+const { userPermissions } = useUserStore();
+
+const hasAddPermission = ref(false);
+const checkedPermission = Boolean(
+  userPermissions[appName.value!]?.[modelName.value!]?.perms["add"]
+);
+hasAddPermission.value = checkedPermission ?? false;
 
 const modelAdminSettingsResponse = await getModelAdminSettings(
   appName.value as string,
@@ -45,7 +52,7 @@ const onTableEvent = async (tableEvent: TableEventType) => {
   <div class="pb-40">
     <div class="flex items-center justify-between">
       <h3 class="text-lg">Select {{ modelName }} to change</h3>
-      <Button class="cursor-pointer" @click="onAddModel">
+      <Button v-if="hasAddPermission" class="cursor-pointer" @click="onAddModel">
         <span class="text-xs"> ADD {{ `${modelName}`.toUpperCase() }} </span>
       </Button>
     </div>

@@ -8,7 +8,7 @@ const { formatTitle } = useUtility();
 const { setUserPermissions, user } = useUserStore();
 const { getUserPermissions } = useAdminApiRequests();
 
-const response = await getUserPermissions(user?.uid ?? "");
+const response = await getUserPermissions(user?.user_id ?? "");
 setUserPermissions(response.permissions);
 
 const items = computed<BreadcrumbItem[]>(() => {

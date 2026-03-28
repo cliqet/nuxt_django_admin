@@ -67,7 +67,7 @@ export const useAdminApiRequests = () => {
   );
 
   const getUserPermissions = (userId: string) => privateApi<{ permissions: UserPermissions}>(
-    `/users/${userId}`,
+    `/users/permissions/${userId}`,
   );
 
   return {

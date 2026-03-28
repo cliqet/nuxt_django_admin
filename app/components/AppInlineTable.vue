@@ -40,6 +40,20 @@ const props = defineProps<{
   isAddFormOpen: boolean;
 }>();
 
+const { userPermissions } = useUserStore();
+
+const hasAddPermission = ref(false);
+const checkedPermission = Boolean(
+  userPermissions[props.appName!]?.[props.modelName!]?.perms["add"]
+);
+hasAddPermission.value = checkedPermission ?? false;
+
+const hasChangePermission = ref(false);
+const checkedChangePermission = Boolean(
+  userPermissions[props.appName!]?.[props.modelName!]?.perms["change"]
+);
+hasChangePermission.value = checkedChangePermission ?? false;
+
 const emit = defineEmits<{
   (e: "openState", isOpen: boolean): void;
 }>();
@@ -86,7 +100,7 @@ const columns = computed(() => {
       class: {
         // sticky left-0 pins it; w-10 keeps it narrow (40px)
         th: "sticky left-0 bg-white dark:bg-slate-900 z-20 w-8 px-2",
-      td: "sticky left-0 bg-white dark:bg-slate-900 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)] w-8 px-2 group-hover:bg-primary-50/50 transition-colors"
+        td: "sticky left-0 bg-white dark:bg-slate-900 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.05)] w-8 px-2 group-hover:bg-primary-50/50 transition-colors",
       },
     },
     header: ({ table }) =>
@@ -183,34 +197,36 @@ const columns = computed(() => {
   });
 
   // NEW: Action Column (Pencil Icon)
-  dynamicCols.push({
-    id: "actions",
-    header: "",
-    meta: {
-      class: {
-        // 'w-10' sets a tight 40px width; 'bg-white' or 'bg-slate-50' matches standard table backgrounds
-        // Use 'dark:bg-slate-900' to support dark mode if applicable
-        th: "sticky right-0 bg-white dark:bg-slate-900 z-10 w-10",
-        td: "sticky right-0 bg-white dark:bg-slate-900 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)] w-10",
+  if (hasChangePermission.value) {
+    dynamicCols.push({
+      id: "actions",
+      header: "",
+      meta: {
+        class: {
+          // 'w-10' sets a tight 40px width; 'bg-white' or 'bg-slate-50' matches standard table backgrounds
+          // Use 'dark:bg-slate-900' to support dark mode if applicable
+          th: "sticky right-0 bg-white dark:bg-slate-900 z-10 w-10",
+          td: "sticky right-0 bg-white dark:bg-slate-900 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)] w-10",
+        },
       },
-    },
-    cell: ({ row }) =>
-      h("div", { class: "flex justify-end w-full" }, [
-        // Wrapper to push content to the right
-        h(resolveComponent("UButton"), {
-          icon: "i-lucide-pencil",
-          variant: "ghost",
-          color: "primary",
-          size: "xs",
-          square: true,
-          class: "cursor-pointer",
-          onClick: (e: MouseEvent) => {
-            e.stopPropagation(); // Prevents the click from triggering other row events
-            openChangeDrawer(row.original.pk);
-          },
-        }),
-      ]),
-  });
+      cell: ({ row }) =>
+        h("div", { class: "flex justify-end w-full" }, [
+          // Wrapper to push content to the right
+          h(resolveComponent("UButton"), {
+            icon: "i-lucide-pencil",
+            variant: "ghost",
+            color: "primary",
+            size: "xs",
+            square: true,
+            class: "cursor-pointer",
+            onClick: (e: MouseEvent) => {
+              e.stopPropagation(); // Prevents the click from triggering other row events
+              openChangeDrawer(row.original.pk);
+            },
+          }),
+        ]),
+    });
+  }
 
   return dynamicCols;
 });
@@ -293,7 +309,7 @@ const onDelete = async () => {
 <template>
   <div v-if="listResults" class="w-full">
     <div class="flex gap-3 border border-primary rounded-md my-2 p-2">
-      <UDrawer v-model:open="isDrawerOpen">
+      <UDrawer v-if="hasAddPermission" v-model:open="isDrawerOpen">
         <UButton
           label="Add"
           color="primary"

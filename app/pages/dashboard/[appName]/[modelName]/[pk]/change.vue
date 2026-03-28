@@ -16,6 +16,19 @@ const appName = ref(routeSegments.value.at(-4));
 const modelName = ref(routeSegments.value.at(-3));
 const pk = ref(routeSegments.value.at(-2));
 
+const { userPermissions } = useUserStore();
+const hasChangePermission = ref(false);
+const checkedChangePermission = Boolean(
+  userPermissions[appName.value!]?.[modelName.value!]?.perms["change"]
+);
+hasChangePermission.value = checkedChangePermission ?? false;
+
+const hasViewPermission = ref(false);
+const checkedViewPermission = Boolean(
+  userPermissions[appName.value!]?.[modelName.value!]?.perms["view"]
+);
+hasViewPermission.value = checkedViewPermission ?? false;
+
 const {
   isFieldValueValid,
   convertModelFieldValuesToFormData,
@@ -119,9 +132,9 @@ const clearFieldError = (fieldName: string) => {
   formErrors.value[fieldName] = "";
 };
 
-const initialAddOpenFormState = modelAdminSettings.custom_inlines.map(_ => {
-  return false
-})
+const initialAddOpenFormState = modelAdminSettings.custom_inlines.map((_) => {
+  return false;
+});
 const addFormOpenState = ref(initialAddOpenFormState);
 </script>
 
@@ -131,48 +144,55 @@ const addFormOpenState = ref(initialAddOpenFormState);
       <h3 class="text-lg">Change {{ modelName }}</h3>
     </div>
 
-    <div
-      v-for="fieldset in modelAdminSettings.fieldsets"
-      :key="fieldset.title"
-      class="my-1 py-2"
-    >
-      <AppFormFieldset
-        v-model="modelFieldValues"
-        :title="fieldset.title"
-        :fieldset-fields="fieldset.fields"
-        :model-fields="modelFields"
-        :form-errors="formErrors"
-        @clear-error="clearFieldError"
-      />
-    </div>
-
-    <div
-      v-for="(inline, inlineIndex) in modelAdminSettings.custom_inlines"
-      :key="inline.model_name_label"
-      class="my-2"
-    >
-      <div class="bg-primary rounded-t-lg p-2">
-        <h3 class="text-white font-bold">
-          <NuxtLink
-            :to="`${DashboardRoute.DashboardHome}/${inline.app_label}/${inline.model_name}`"
-            target="_blank"
-          >
-            {{ inline.model_name_label }}
-          </NuxtLink>
-        </h3>
+    <div v-if="hasViewPermission">
+      <div
+        v-for="fieldset in modelAdminSettings.fieldsets"
+        :key="fieldset.title"
+        class="my-1 py-2"
+      >
+        <AppFormFieldset
+          v-model="modelFieldValues"
+          :title="fieldset.title"
+          :fieldset-fields="fieldset.fields"
+          :model-fields="modelFields"
+          :form-errors="formErrors"
+          @clear-error="clearFieldError"
+        />
       </div>
 
-      <AppInlineTable
-        :settings="inline"
-        :app-name="inline.app_label"
-        :model-name="inline.model_name"
-        :is-add-form-open="addFormOpenState[inlineIndex]!"
-        @table_event="() => {}"
-        @open-state="(isOpen: boolean) => addFormOpenState[inlineIndex] = isOpen"
-      />
+      <div
+        v-for="(inline, inlineIndex) in modelAdminSettings.custom_inlines"
+        :key="inline.model_name_label"
+        class="my-2"
+      >
+        <div class="bg-primary rounded-t-lg p-2">
+          <h3 class="text-white font-bold">
+            <NuxtLink
+              :to="`${DashboardRoute.DashboardHome}/${inline.app_label}/${inline.model_name}`"
+              target="_blank"
+            >
+              {{ inline.model_name_label }}
+            </NuxtLink>
+          </h3>
+        </div>
+
+        <AppInlineTable
+          :settings="inline"
+          :app-name="inline.app_label"
+          :model-name="inline.model_name"
+          :is-add-form-open="addFormOpenState[inlineIndex]!"
+          @table_event="() => {}"
+          @open-state="(isOpen: boolean) => addFormOpenState[inlineIndex] = isOpen"
+        />
+      </div>
+    </div>
+
+    <div v-if="!hasViewPermission" class="flex items-center">
+      <h3 class="text-xl">You have no permission to change</h3>
     </div>
 
     <SaveFormButtons
+      v-if="hasChangePermission"
       @save="handleSave('SAVE')"
       @save-add="handleSave('SAVE_AND_ADD')"
       @save-edit="handleSave('SAVE_AND_CONTINUE')"
