@@ -17,14 +17,6 @@ const modelName = ref(routeSegments.value.at(-2));
 
 const userStore = useUserStore();
 
-const hasAddPermission = ref(
-  userStore.userAppModelPermissions[
-    appName.value!
-  ]?.modelPerms[
-    modelName.value!
-  ]?.perms.add
-);
-
 const {
   isFieldValueValid,
   convertModelFieldValuesToFormData,
@@ -136,7 +128,7 @@ const clearFieldError = (fieldName: string) => {
       <h3 class="text-lg">Add {{ modelName }}</h3>
     </div>
 
-    <div v-if="hasAddPermission">
+    <div v-if="userStore.hasAddPermission(appName!, modelName!)">
       <div
         v-for="fieldset in modelAdminSettings.fieldsets"
         :key="fieldset.title"
@@ -159,7 +151,7 @@ const clearFieldError = (fieldName: string) => {
       />
     </div>
 
-    <div v-if="!hasAddPermission" class="flex items-center">
+    <div v-if="!userStore.hasAddPermission(appName!, modelName!)" class="flex items-center">
       <h3 class="text-xl">You have no permission to add</h3>
     </div>
   </form>

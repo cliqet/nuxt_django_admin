@@ -18,22 +18,6 @@ const pk = ref(routeSegments.value.at(-2));
 
 const userStore = useUserStore();
 
-const hasChangePermission = ref(
-  userStore.userAppModelPermissions[
-    appName.value!
-  ]?.modelPerms[
-    modelName.value!
-  ]?.perms.change
-);
-
-const hasViewPermission = ref(
-  userStore.userAppModelPermissions[
-    appName.value!
-  ]?.modelPerms[
-    modelName.value!
-  ]?.perms.view
-);
-
 const {
   isFieldValueValid,
   convertModelFieldValuesToFormData,
@@ -149,7 +133,7 @@ const addFormOpenState = ref(initialAddOpenFormState);
       <h3 class="text-lg">Change {{ modelName }}</h3>
     </div>
 
-    <div v-if="hasViewPermission">
+    <div v-if="userStore.hasViewPermission(appName!, modelName!)">
       <div
         v-for="fieldset in modelAdminSettings.fieldsets"
         :key="fieldset.title"
@@ -192,12 +176,12 @@ const addFormOpenState = ref(initialAddOpenFormState);
       </div>
     </div>
 
-    <div v-if="!hasViewPermission" class="flex items-center">
+    <div v-if="!userStore.hasViewPermission(appName!, modelName!)" class="flex items-center">
       <h3 class="text-xl">You have no permission to change</h3>
     </div>
 
     <SaveFormButtons
-      v-if="hasChangePermission"
+      v-if="userStore.hasChangePermission(appName!, modelName!)"
       @save="handleSave('SAVE')"
       @save-add="handleSave('SAVE_AND_ADD')"
       @save-edit="handleSave('SAVE_AND_CONTINUE')"

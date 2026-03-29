@@ -40,19 +40,7 @@ const props = defineProps<{
   isAddFormOpen: boolean;
 }>();
 
-const { userPermissions } = useUserStore();
-
-const hasAddPermission = ref(false);
-const checkedPermission = Boolean(
-  userPermissions[props.appName!]?.[props.modelName!]?.perms["add"]
-);
-hasAddPermission.value = checkedPermission ?? false;
-
-const hasChangePermission = ref(false);
-const checkedChangePermission = Boolean(
-  userPermissions[props.appName!]?.[props.modelName!]?.perms["change"]
-);
-hasChangePermission.value = checkedChangePermission ?? false;
+const userStore = useUserStore();
 
 const emit = defineEmits<{
   (e: "openState", isOpen: boolean): void;
@@ -147,7 +135,7 @@ const columns = computed(() => {
         }
 
         // Render as NuxtLink if key is in list_display_links
-        if (isLink) {
+        if (isLink && userStore.hasViewPermission(props.appName, props.modelName)) {
           const pk = row.original.pk;
           return h(
             NuxtLink,
@@ -197,7 +185,7 @@ const columns = computed(() => {
   });
 
   // NEW: Action Column (Pencil Icon)
-  if (hasChangePermission.value) {
+  if (userStore.hasChangePermission(props.appName, props.modelName)) {
     dynamicCols.push({
       id: "actions",
       header: "",
@@ -309,7 +297,10 @@ const onDelete = async () => {
 <template>
   <div v-if="listResults" class="w-full">
     <div class="flex gap-3 border border-primary rounded-md my-2 p-2">
-      <UDrawer v-if="hasAddPermission" v-model:open="isDrawerOpen">
+      <UDrawer 
+        v-if="userStore.hasAddPermission(props.appName, props.modelName)" 
+        v-model:open="isDrawerOpen"
+      >
         <UButton
           label="Add"
           color="primary"
@@ -336,6 +327,7 @@ const onDelete = async () => {
       </UDrawer>
 
       <UDrawer
+        v-if="userStore.hasChangePermission(appName, modelName)"
         v-model:open="isChangeDrawerOpen"
         @update:open="
           (val) => {
@@ -357,6 +349,7 @@ const onDelete = async () => {
       </UDrawer>
 
       <Button
+        v-if="userStore.hasDeletePermission(appName, modelName)"
         class="cursor-pointer bg-red-500"
         :disabled="rowsSelected.length === 0"
         @click="onDelete"

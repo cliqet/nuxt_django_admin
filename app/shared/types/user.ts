@@ -1,15 +1,5 @@
 export type PermActions = 'add' | 'view' | 'change' | 'delete';
 
-export type ModelPermission = {
-    id: number;
-    perms: Record<string, number>;
-    perms_ids: Record<string, PermActions>;
-}
-
-export type UserModelPermission = Record<string, ModelPermission>;
-
-export type UserPermissions = Record<string, UserModelPermission>;
-
 export type Permission = {
   id: number;
   name: string;

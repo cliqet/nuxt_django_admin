@@ -21,6 +21,7 @@ const UBadge = resolveComponent("UBadge");
 
 const router = useRouter();
 const route = useRoute();
+const userStore = useUserStore();
 
 const { getModelListViewRequest, getModelFields, runListviewAction } =
   useAdminApiRequests();
@@ -124,7 +125,7 @@ const columns = computed(() => {
         }
 
         // Render as NuxtLink if key is in list_display_links
-        if (isLink) {
+        if (isLink && userStore.hasViewPermission(props.appName!, props.modelName!)) {
           const pk = row.original.pk;
           return h(
             NuxtLink,
