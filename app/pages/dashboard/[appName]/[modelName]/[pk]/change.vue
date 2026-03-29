@@ -16,18 +16,23 @@ const appName = ref(routeSegments.value.at(-4));
 const modelName = ref(routeSegments.value.at(-3));
 const pk = ref(routeSegments.value.at(-2));
 
-const { userPermissions } = useUserStore();
-const hasChangePermission = ref(false);
-const checkedChangePermission = Boolean(
-  userPermissions[appName.value!]?.[modelName.value!]?.perms["change"]
-);
-hasChangePermission.value = checkedChangePermission ?? false;
+const userStore = useUserStore();
 
-const hasViewPermission = ref(false);
-const checkedViewPermission = Boolean(
-  userPermissions[appName.value!]?.[modelName.value!]?.perms["view"]
+const hasChangePermission = ref(
+  userStore.userAppModelPermissions[
+    appName.value!
+  ]?.modelPerms[
+    modelName.value!
+  ]?.perms.change
 );
-hasViewPermission.value = checkedViewPermission ?? false;
+
+const hasViewPermission = ref(
+  userStore.userAppModelPermissions[
+    appName.value!
+  ]?.modelPerms[
+    modelName.value!
+  ]?.perms.view
+);
 
 const {
   isFieldValueValid,

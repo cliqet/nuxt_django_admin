@@ -7,13 +7,11 @@ const route = useRoute();
 const { formatTitle } = useUtility();
 const userStore = useUserStore();
 const appStore = useAppStore();
-const { getUserPermissions, getAdminAppRequest } = useAdminApiRequests();
+const { getAdminAppRequest } = useAdminApiRequests();
 
 const appResponse = await getAdminAppRequest();
 appStore.setAppSettings(appResponse.appList);
-
-const response = await getUserPermissions(userStore.user?.user_id ?? "");
-userStore.setUserPermissions(response.permissions);
+userStore.setUserAppModelPermissions();
 
 const items = computed<BreadcrumbItem[]>(() => {
   // Start with the fixed Home item

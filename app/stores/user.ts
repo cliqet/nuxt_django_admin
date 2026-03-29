@@ -27,7 +27,7 @@ export const useUserStore = defineStore('user', () => {
         modelPermsObj[model.objectName.toLowerCase()] = { perms: model.perms }
       });
 
-      permissions[app.name] = {
+      permissions[app.appLabel] = {
         hasModulePerms: app.hasModulePerms,
         modelPerms: modelPermsObj
       }
