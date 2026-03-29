@@ -5,11 +5,15 @@ import { DashboardRoute } from '~/shared/constants/routes';
 
 const route = useRoute();
 const { formatTitle } = useUtility();
-const { setUserPermissions, user } = useUserStore();
-const { getUserPermissions } = useAdminApiRequests();
+const userStore = useUserStore();
+const appStore = useAppStore();
+const { getUserPermissions, getAdminAppRequest } = useAdminApiRequests();
 
-const response = await getUserPermissions(user?.user_id ?? "");
-setUserPermissions(response.permissions);
+const appResponse = await getAdminAppRequest();
+appStore.setAppSettings(appResponse.appList);
+
+const response = await getUserPermissions(userStore.user?.user_id ?? "");
+userStore.setUserPermissions(response.permissions);
 
 const items = computed<BreadcrumbItem[]>(() => {
   // Start with the fixed Home item
@@ -51,7 +55,7 @@ const items = computed<BreadcrumbItem[]>(() => {
     <SidebarProvider
       class="h-screen"
     >
-      <AppSidebar />
+      <AppSidebar v-if="appStore.appSettings" />
       <main class="relative px-3 md:px-10 py-3 w-full overflow-y-auto">
         <SidebarTrigger class="absolute top-1/3 left-0 cursor-pointer" />
         <div class="h-full w-full pb-40 px-5">

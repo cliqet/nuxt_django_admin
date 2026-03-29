@@ -1,25 +1,35 @@
 <script setup lang="ts">
-import type { AppSettingsType } from "~/shared/types/app";
 import { ChevronDown, ChevronUp } from "lucide-vue-next";
-import { useAdminApiRequests } from "~/composables/admin/useAdminApiRequests";
 import Collapsible from "./ui/collapsible/Collapsible.vue";
 import CollapsibleTrigger from "./ui/collapsible/CollapsibleTrigger.vue";
 import CollapsibleContent from "./ui/collapsible/CollapsibleContent.vue";
 
-const { getAdminAppRequest } = useAdminApiRequests();
+const appStore = useAppStore();
 
-const appSettings = ref<AppSettingsType[]>([]);
+const allowedApps = computed(() => {
+  return appStore.appSettings
+    .filter(app => app.hasModulePerms) // 1. Keep only allowed groups
+    .map(app => ({
+      ...app,
+      // 2. Filter the models inside each group
+      models: app.models.filter(model => model.perms.view) 
+    }))
+});
 
-const response = await getAdminAppRequest();
-appSettings.value = response.appList;
+const appOpenStates = ref<Record<string, boolean>>({});
 
-const appOpenStates = ref(
-  Array.from({ length: appSettings.value.length }, () => true)
-);
+// Watch allowedApps and fill the object with 'true' for any new apps
+watch(allowedApps, (newApps) => {
+  newApps.forEach(app => {
+    if (appOpenStates.value[app.name] === undefined) {
+      appOpenStates.value[app.name] = true;
+    }
+  });
+}, { immediate: true });
 </script>
 
 <template>
-  <ClientOnly v-if="appSettings">
+  <ClientOnly v-if="allowedApps.length > 0">
     <Sidebar class="border-r-slate-400">
       <SidebarContent>
         <SidebarGroup>
@@ -35,7 +45,7 @@ const appOpenStates = ref(
             <SidebarMenu>
               <SidebarMenuItem>
                 <Collapsible
-                  v-for="(app, index) in appSettings"
+                  v-for="app in allowedApps"
                   :key="app.name"
                   default-open
                   class="group/collapsible"
@@ -45,7 +55,10 @@ const appOpenStates = ref(
                     class="py-0"
                   >
                     <SidebarGroupLabel as-child>
-                      <CollapsibleTrigger class="bg-primary my-2 py-1 flex h-fit" @click="appOpenStates[index] = !appOpenStates[index]">
+                      <CollapsibleTrigger 
+                        class="bg-primary my-2 py-1 flex h-fit" 
+                        @click="appOpenStates[app.name] = !appOpenStates[app.name]"
+                      >
                         <div class="grow">
                           <span class="font-bold text-white text-sm">
                             {{ app.name }}
@@ -53,14 +66,12 @@ const appOpenStates = ref(
                         </div>
                         <div class="ml-auto">
                           <ChevronUp
-                            v-if="appOpenStates[index]"
-                            :class="{ 'rotate-180': !appOpenStates[index] }"
+                            v-if="appOpenStates[app.name]"
                             class="transition-transform cursor-pointer text-white"
                             :size="18"
                           />
                           <ChevronDown
-                            v-if="!appOpenStates[index]"
-                            :class="{ 'rotate-180': appOpenStates[index] }"
+                            v-else
                             class="transition-transform cursor-pointer text-white"
                             :size="18"
                           />
@@ -68,7 +79,7 @@ const appOpenStates = ref(
                       </CollapsibleTrigger>
                     </SidebarGroupLabel>
                     <CollapsibleContent>
-                      <SidebarGroupContent v-if="appOpenStates[index]">
+                      <SidebarGroupContent v-if="appOpenStates[app.name]">
                         <SidebarMenu>
                           <SidebarMenuItem
                             v-for="model in app.models"

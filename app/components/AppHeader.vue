@@ -8,14 +8,16 @@ const isDark = useDark();
 
 const appStore = useAppStore();
 const userStore = useUserStore();
-const isModalOpen = computed(() => appStore.isModalOpen);
-const setIsModalOpen = computed(() => appStore.setIsModalOpen);
 
 const onLogout = () => {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   userStore.setUser(null);
   navigateTo(PublicRoute.Login);
 };
+
+const onAppSearchClick = () => {
+  appStore.setIsModalOpen(!appStore.isModalOpen);
+}
 </script>
 
 <template>
@@ -27,7 +29,7 @@ const onLogout = () => {
       <Button
         v-if="userStore.user"
         class="p-2"
-        @click="setIsModalOpen(!isModalOpen)"
+        @click="onAppSearchClick"
       >
         <Icon
           name="bitcoin-icons:search-outline"

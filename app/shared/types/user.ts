@@ -43,3 +43,19 @@ export type TokenPayload = User & {
     jti : number;
     iss : string;
 }
+
+export type PermissionType = {
+  add : boolean;
+  change : boolean;
+  delete : boolean;
+  view : boolean;
+}
+
+export type ModelPermissionType = Record<string, { perms: PermissionType }>;
+
+export type AppPermissionType = {
+  hasModulePerms: boolean;
+  modelPerms: ModelPermissionType
+}
+
+export type UserAppModelPermissionsType = Record<string, AppPermissionType>;

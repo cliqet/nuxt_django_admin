@@ -1,15 +1,7 @@
 <script setup lang="ts">
-import { useAdminApiRequests } from "~/composables/admin/useAdminApiRequests";
-import type { AppSettingsType } from "~/shared/types/app";
 import { useAppStore } from "~/stores/app";
 
-
 const appStore = useAppStore();
-const { getAdminAppRequest } = useAdminApiRequests();
-
-const appSettings = ref<AppSettingsType[]>([]);
-const response = await getAdminAppRequest();
-appSettings.value = response.appList;
 
 onBeforeUnmount(() => {
   appStore.setIsModalOpen(false);
@@ -19,6 +11,16 @@ const onClickApp = async (link: string) => {
   await navigateTo(link);
   appStore.setIsModalOpen(false);
 };
+
+const allowedApps = computed(() => {
+  return appStore.appSettings
+    .filter(app => app.hasModulePerms) // 1. Keep only allowed groups
+    .map(app => ({
+      ...app,
+      // 2. Filter the models inside each group
+      models: app.models.filter(model => model.perms.view) 
+    }))
+});
 </script>
 
 <template>
@@ -30,7 +32,7 @@ const onClickApp = async (link: string) => {
     <CommandList>
       <CommandEmpty>No results found.</CommandEmpty>
       <CommandGroup
-        v-for="adminApp in appSettings"
+        v-for="adminApp in allowedApps"
         :key="adminApp.name"
         :heading="adminApp.name"
       >
