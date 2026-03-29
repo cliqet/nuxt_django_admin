@@ -15,13 +15,15 @@ const routeSegments = ref(route.path.split("/"));
 const appName = ref(routeSegments.value.at(-3));
 const modelName = ref(routeSegments.value.at(-2));
 
-const { userPermissions } = useUserStore();
+const userStore = useUserStore();
 
-const hasAddPermission = ref(false);
-const checkedPermission = Boolean(
-  userPermissions[appName.value!]?.[modelName.value!]?.perms["add"]
+const hasAddPermission = ref(
+  userStore.userAppModelPermissions[
+    appName.value!
+  ]?.modelPerms[
+    modelName.value!
+  ]?.perms.add
 );
-hasAddPermission.value = checkedPermission ?? false;
 
 const {
   isFieldValueValid,
