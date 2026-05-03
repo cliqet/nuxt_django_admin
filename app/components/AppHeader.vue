@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import type { DropdownMenuItem } from "@nuxt/ui";
 import { useDark } from "@vueuse/core";
 import { ACCESS_TOKEN_KEY } from "~/shared/constants/app";
-import { PublicRoute } from "~/shared/constants/routes";
+import { DashboardRoute, PublicRoute } from "~/shared/constants/routes";
 import { useAppStore } from "~/stores/app";
 
 const isDark = useDark();
@@ -15,9 +16,36 @@ const onLogout = () => {
   navigateTo(PublicRoute.Login);
 };
 
+const items = ref<DropdownMenuItem[][]>([
+  [
+    {
+      label: userStore.user?.email,
+      type: "label"
+    }
+  ],
+  [
+    {
+      label: 'Settings',
+      to: DashboardRoute.DashboardHome
+    },
+  ],
+  [
+    {
+      label: 'Logout',
+      icon: 'i-lucide-log-out',
+      color: 'error',
+      class: 'cursor-pointer flex items-center',
+      iconClass: 'self-center align-middle', 
+      onSelect: onLogout
+    }
+  ]
+]);
+
+
+
 const onAppSearchClick = () => {
   appStore.setIsModalOpen(!appStore.isModalOpen);
-}
+};
 </script>
 
 <template>
@@ -26,11 +54,7 @@ const onAppSearchClick = () => {
 
     <!-- <AppMenuList /> -->
     <div class="flex gap-2">
-      <Button
-        v-if="userStore.user"
-        class="p-2"
-        @click="onAppSearchClick"
-      >
+      <Button v-if="userStore.user" class="p-2" @click="onAppSearchClick">
         <Icon
           name="bitcoin-icons:search-outline"
           size="25"
@@ -55,34 +79,15 @@ const onAppSearchClick = () => {
         </Button>
       </ClientOnly>
 
-      <Popover v-if="userStore.user">
-        <PopoverTrigger as-child>
-          <Button class="p-2">
-            <Icon
-              name="iconamoon:profile-fill"
-              size="25"
-              class="cursor-pointer"
-            />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent class="w-80">
-          <div class="grid gap-4">
-            <div class="space-y-2">
-              <p class="text-sm text-muted-foreground">
-                {{ userStore.user.email }}
-              </p>
-            </div>
-            <div class="flex flex-col gap-2">
-              <div class="cursor-pointer border-b py-2">
-                <p class="text-sm">Settings</p>
-              </div>
-              <div class="cursor-pointer border-b py-2" @click="onLogout">
-                <p class="text-sm">Logout</p>
-              </div>
-            </div>
-          </div>
-        </PopoverContent>
-      </Popover>
+      <UDropdownMenu :items="items">
+        <UButton 
+          icon="i-lucide-circle-user"
+          size="xl"
+          variant="solid"
+          color="primary"
+          class="text-white text-xl justify-center cursor-pointer"
+        />
+      </UDropdownMenu>
 
       <div class="lg:hidden">
         <!-- <AppMobileMenuList /> -->

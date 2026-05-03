@@ -118,7 +118,7 @@ const clearFieldError = (fieldName: string) => {
   <div v-if="isOpen" class="overflow-y-auto px-3 pt-3 pb-20">
     <form ref="formRef" novalidate="true" class="pb-10" @submit.prevent="">
       <div class="flex items-center">
-        <h3 class="text-lg font-bold">Edit {{ modelName }} #{{ pk }}</h3>
+        <h3 class="text-lg font-bold">Edit {{ modelName }}: {{ pk }}</h3>
       </div>
 
       <div
