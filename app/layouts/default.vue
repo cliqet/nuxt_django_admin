@@ -17,7 +17,7 @@ const items = computed<BreadcrumbItem[]>(() => {
   // Start with the fixed Home item
   const breadcrumbs: BreadcrumbItem[] = [
     {
-      label: 'Home',
+      label: 'Dashboard',
       to: DashboardRoute.DashboardHome
     }
   ];

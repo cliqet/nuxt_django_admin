@@ -88,10 +88,6 @@ const onAppSearchClick = () => {
           class="text-white text-xl justify-center cursor-pointer"
         />
       </UDropdownMenu>
-
-      <div class="lg:hidden">
-        <!-- <AppMobileMenuList /> -->
-      </div>
     </div>
   </div>
 </template>

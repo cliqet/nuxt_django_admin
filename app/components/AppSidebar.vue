@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp } from "lucide-vue-next";
 import Collapsible from "./ui/collapsible/Collapsible.vue";
 import CollapsibleTrigger from "./ui/collapsible/CollapsibleTrigger.vue";
 import CollapsibleContent from "./ui/collapsible/CollapsibleContent.vue";
+import { DashboardRoute } from "~/shared/constants/routes";
 
 const appStore = useAppStore();
 
@@ -34,10 +35,10 @@ watch(allowedApps, (newApps) => {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel class="cursor-pointer">
-            <NuxtLink href="/">
+            <NuxtLink :href="`${DashboardRoute.DashboardHome}`">
               <div class="flex items-center gap-1">
                 <Icon name="ep:back" size="20" class="text-primary" />
-                <span class="font-bold text-sm text-primary">Home</span>
+                <span class="font-bold text-sm text-primary">Dashboard</span>
               </div>
             </NuxtLink>
           </SidebarGroupLabel>
