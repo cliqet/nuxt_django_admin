@@ -65,10 +65,6 @@ export const useAdminApiRequests = () => {
     }
   );
 
-  // const getUserPermissions = (userId: string) => privateApi<{ permissions: UserPermissions}>(
-  //   `/users/permissions/${userId}`,
-  // );
-
   return {
     getAdminAppRequest,
     getModelListViewRequest,
@@ -78,6 +74,5 @@ export const useAdminApiRequests = () => {
     addRecord,
     changeRecord,
     runListviewAction,
-    // getUserPermissions,
   }
 }
