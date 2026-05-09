@@ -19,6 +19,10 @@ export default defineNuxtConfig({
       ]
     }
   },
+
+  routeRules: {
+    "/": { redirect: "/login" }
+  },
   modules: [
     '@nuxt/icon',
     '@nuxt/eslint',

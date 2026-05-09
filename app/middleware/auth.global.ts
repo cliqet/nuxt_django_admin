@@ -24,13 +24,15 @@ export default defineNuxtRouteMiddleware((to, _) => {
       if ([PublicRoute.Login as string].includes(to.fullPath)) {
         return navigateTo(DashboardRoute.DashboardHome);
       }
-    } catch (err) {
-      console.error("Error", err);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      console.error(err);
+
       if ([PublicRoute.Login as string].includes(to.fullPath)) {
         localStorage.removeItem(ACCESS_TOKEN_KEY);
-      } else {
-        return navigateTo(PublicRoute.Login);
       }
+      
+      return navigateTo(PublicRoute.Login);
     }
   }
 });
