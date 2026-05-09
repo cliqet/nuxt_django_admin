@@ -6,6 +6,10 @@ import { ACCESS_TOKEN_KEY } from "~/shared/constants/app";
 import { DashboardRoute } from "~/shared/constants/routes";
 import { useVuelidate } from "@vuelidate/core";
 import { required, email } from "@vuelidate/validators";
+import type { NuxtTurnstile } from "#components";
+import { toast } from "vue-sonner";
+import { TOAST_ERROR_STYLE } from "~/shared/constants/ui";
+
 
 definePageMeta({
   layout: "unauthenticated",
@@ -14,7 +18,10 @@ definePageMeta({
 const route = useRoute();
 
 const { setUser } = useUserStore();
-const { loginRequest } = useAuthenticationApiRequests();
+const { loginRequest, verifyCloudflareToken } = useAuthenticationApiRequests();
+
+const token = ref("");
+const turnstile = ref<InstanceType<typeof NuxtTurnstile> | null>(null)
 
 const loginForm = ref({
   email: "",
@@ -33,6 +40,18 @@ const handleLogin = async () => {
   if (!isValid) {
     return;
   }
+
+  const tokenVerifyResponse = await verifyCloudflareToken(token.value);
+
+  if (!tokenVerifyResponse.isValid) {
+    turnstile.value?.reset();
+
+    toast("Verification Error", {
+      description: "Error verifying request",
+      style: TOAST_ERROR_STYLE,
+    });
+    return;
+  } 
 
   const response = await loginRequest(loginForm.value);
 
@@ -99,10 +118,13 @@ const handleLogin = async () => {
             <Button
               class="w-full cursor-pointer"
               type="submit"
-              @click="handleLogin"
             >
               Login
             </Button>
+          </div>
+
+          <div class="mt-4 flex items-center justify-center">
+            <NuxtTurnstile v-model="token" />
           </div>
         </form>
       </CardContent>

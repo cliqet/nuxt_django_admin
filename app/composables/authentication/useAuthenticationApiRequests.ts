@@ -12,7 +12,16 @@ export const useAuthenticationApiRequests = () => {
     },
   );
 
+  const verifyCloudflareToken = (token: string) => publicApi<{ isValid: boolean }>(
+    'verify-cloudflare-token',
+    {
+      body: { token },
+      method: 'post'
+    }
+  )
+
   return {
-    loginRequest
+    loginRequest,
+    verifyCloudflareToken,
   }
 }

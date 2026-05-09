@@ -30,7 +30,8 @@ export default defineNuxtConfig({
     '@vueuse/nuxt',
     '@pinia/nuxt',
     '@nuxt/ui',
-    'nuxt-jsoneditor'
+    'nuxt-jsoneditor',
+    '@nuxtjs/turnstile',
   ],
   shadcn: {
     /**
@@ -50,7 +51,13 @@ export default defineNuxtConfig({
     public: {
       domainName: "",
       apiEndpoint: "",
+    },
+    turnstile: {
+      secretKey: ""
     }
   },
   ssr: false,
+  turnstile: {
+    siteKey: "0x4AAAAAAA6gIAJn2ADK5DSD"
+  }
 })

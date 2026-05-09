@@ -84,14 +84,13 @@ export const useApiClients = () => {
     },
 
     onResponseError: async ({ response, error, request, options }) => {
-      console.log("RESPONSE ERROR", response)
       logError({
         error: error?.stack,
         request,
         response,
         options,
       });
-      console.log("RESPONSE STATUS", response.status)
+
       if (response.status === 401) {
         userStore.setUser(null);
         localStorage.removeItem(ACCESS_TOKEN_KEY);
@@ -116,7 +115,6 @@ export const useApiClients = () => {
           description: message,
           style: TOAST_ERROR_STYLE,
         });
-        console.log("RESPONSE", message);
       }
     },
   });
