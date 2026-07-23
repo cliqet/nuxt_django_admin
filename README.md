@@ -31,36 +31,31 @@ have an account and setup your turnstile widget.
 
 ### Screenshots
 #### Login
-<img width="1382" alt="login" src="https://github.com/user-attachments/assets/45e0a0a3-94a5-4319-a487-fdb8abf1bbbe" />
+<img width="1418" height="475" alt="nuxt_admin_login" src="https://github.com/user-attachments/assets/f7c9fedb-bbd1-47a7-a5c9-5e874e0c4027" />
+
 
 #### App Search
-<img width="1404" alt="app_search" src="https://github.com/user-attachments/assets/c8bfbf68-0476-438f-b91d-6142164d0c17" />
+<img width="1418" height="539" alt="nuxt_admin_app_search" src="https://github.com/user-attachments/assets/77fb4756-56ff-4a7c-b9bf-6433dc0c2c7f" />
+
 
 #### Forms
-<img width="1395" alt="add_form1" src="https://github.com/user-attachments/assets/fbf9dadc-96e4-4126-8dcb-773c809d7ab5" />
-<img width="1395" alt="add_form2" src="https://github.com/user-attachments/assets/2ec7c3e4-f604-4cc8-bf9f-7e55c1f6ad0c" />
+<img width="1418" height="549" alt="nuxt_admin_form1" src="https://github.com/user-attachments/assets/256c4b0c-3d01-4b93-8d5d-c7ed94ba9e11" />
+<img width="1418" height="549" alt="nuxt_admin_form2" src="https://github.com/user-attachments/assets/e5d4c058-27e7-499c-9681-c6a519ac3b11" />
+<img width="1418" height="549" alt="nuxt_admin_form3" src="https://github.com/user-attachments/assets/27ab1322-5c59-433b-a35d-44e0f5a93d4c" />
+<img width="1418" height="549" alt="nuxt_admin_form4" src="https://github.com/user-attachments/assets/6603eab8-b196-46f5-8ac1-4860ca5d9a20" />
+
 
 ### Inlines
-<img width="1395" alt="inlines" src="https://github.com/user-attachments/assets/ed429279-5e55-40cf-bc9a-cc3fe6b8e3d2" />
+<img width="1418" height="599" alt="nuxt_admin_inlines" src="https://github.com/user-attachments/assets/f3dd3e46-4675-474b-8648-e3c4b284289a" />
+
 
 #### Listview
-<img width="1395" alt="listview1" src="https://github.com/user-attachments/assets/ab0e9071-2057-45bd-9473-9ef39cdd48ef" />
-<img width="1395" alt="listview2" src="https://github.com/user-attachments/assets/8035ca39-8e83-451e-a2d4-5f8b35610b20" />
+<img width="1418" height="609" alt="nuxt_admin_listview" src="https://github.com/user-attachments/assets/78400054-82f2-4826-a0e2-b99936d5f062" />
 
-#### Documentation 
-<img width="1395" alt="docs" src="https://github.com/user-attachments/assets/abaad498-0a1a-4535-b6b5-07b9b2a21b4f" />
-
-### Queue Management
-<img width="1395" alt="queue_management" src="https://github.com/user-attachments/assets/01faa26c-1b9d-4bc4-ac25-778d371b8151" />
-
-### Query Builder Reports
-<img width="1396" alt="query_builder" src="https://github.com/user-attachments/assets/33c0ed54-5368-4214-8d85-93941d28833d" />
-
-### Raw SQL Query Reports
-<img width="1372" alt="raw_query" src="https://github.com/user-attachments/assets/708f0569-8169-4e55-beda-c91b0b2ea796" />
 
 ### Lightmode
-<img width="1405" alt="lightmode" src="https://github.com/user-attachments/assets/438bda14-ef8b-4eaa-80bd-fe5c9ebcf467" />
+<img width="1418" height="609" alt="nuxt_admin_lightmode" src="https://github.com/user-attachments/assets/4ad7fdac-20b5-42d6-9592-bcaee57fb4ea" />
+
 
 ### Mobile
-<img width="328" alt="mobile" src="https://github.com/user-attachments/assets/0408f42f-8cf3-46f1-a4ac-e14060c92f19" />
+<img width="325" height="563" alt="nuxt_admin_mobile" src="https://github.com/user-attachments/assets/3908544e-dd6f-466e-9ba8-96c96de45741" />
